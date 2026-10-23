@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, '', ~{})}">
+<head><title>Feedback · Admin · Sports</title></head>
+<body>
+<section class="admin-layout">
+    <aside th:replace="~{admin/nav :: nav('contacts')}"></aside>
+    <div>
+        <div class="admin-header"><h1>Feedback</h1></div>
+        <p th:if="${#lists.isEmpty(contacts)}" class="muted">No feedback yet.</p>
+        <div class="table-wrap card" th:unless="${#lists.isEmpty(contacts)}">
+            <table>
+                <thead>
+                <tr><th>Date</th><th>From</th><th>Phone</th><th>Feedback</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="contact : ${contacts}">
+                    <td th:text="${#temporals.format(contact.createdAt, 'dd MMM yyyy')}">Date</td>
+                    <td><span th:text="|${contact.firstName} ${contact.lastName}|">Name</span><br>
+                        <span class="muted" th:text="${contact.user.email}">email</span></td>
+                    <td th:text="${contact.phoneNumber}">Phone</td>
+                    <td th:text="${contact.subject}">Feedback</td>
+                    <td class="actions">
+                        <form th:action="@{/admin/contacts/{id}/delete(id=${contact.contactId})}" method="post"
+                              onsubmit="return confirm('Delete this feedback?')">
+                            <button class="button danger small" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

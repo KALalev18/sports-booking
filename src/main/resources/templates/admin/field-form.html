@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, '', ~{})}">
+<head><title>Facility · Admin · Sports</title></head>
+<body>
+<section class="admin-layout">
+    <aside th:replace="~{admin/nav :: nav('fields')}"></aside>
+    <div>
+        <div class="admin-header"><h1 th:text="${field.fieldId == 0} ? 'Add facility' : 'Edit facility'">Facility</h1></div>
+        <form class="card card-body form wide"
+              th:action="${field.fieldId == 0} ? @{/admin/fields/new} : @{/admin/fields/{id}/edit(id=${field.fieldId})}"
+              th:object="${field}" method="post">
+            <div class="alert error" th:if="${#fields.hasErrors('workingTimeValid')}" th:errors="*{workingTimeValid}"></div>
+            <div class="row">
+                <div>
+                    <label for="fieldName">Name</label>
+                    <input id="fieldName" th:field="*{fieldName}" maxlength="100" required>
+                    <div class="field-error" th:errors="*{fieldName}"></div>
+                </div>
+                <div>
+                    <label for="fieldLocation">City</label>
+                    <input id="fieldLocation" th:field="*{fieldLocation}" maxlength="100" required>
+                    <div class="field-error" th:errors="*{fieldLocation}"></div>
+                </div>
+            </div>
+            <label for="workingDays">Working days</label>
+            <input id="workingDays" th:field="*{workingDays}" maxlength="50" placeholder="Monday to Friday" required>
+            <div class="field-error" th:errors="*{workingDays}"></div>
+            <div class="row">
+                <div>
+                    <label for="startedWorkingTime">Opens at</label>
+                    <input id="startedWorkingTime" type="time" th:field="*{startedWorkingTime}" required>
+                    <div class="field-error" th:errors="*{startedWorkingTime}"></div>
+                </div>
+                <div>
+                    <label for="finishedWorkingTime">Closes at</label>
+                    <input id="finishedWorkingTime" type="time" th:field="*{finishedWorkingTime}" required>
+                    <div class="field-error" th:errors="*{finishedWorkingTime}"></div>
+                </div>
+            </div>
+            <label for="priceByHour">Price per hour in BGN (leave empty if free)</label>
+            <input id="priceByHour" type="number" step="0.01" min="0" th:field="*{priceByHour}">
+            <div class="field-error" th:errors="*{priceByHour}"></div>
+
+            <label for="imageUrl">Image URL</label>
+            <input id="imageUrl" type="url" th:field="*{imageUrl}" maxlength="500">
+            <div class="field-error" th:errors="*{imageUrl}"></div>
+
+            <label for="mapUrl">Google Maps embed URL</label>
+            <input id="mapUrl" type="url" th:field="*{mapUrl}" maxlength="1000">
+            <div class="field-error" th:errors="*{mapUrl}"></div>
+
+            <div class="actions">
+                <button class="button" type="submit">Save</button>
+                <a class="button secondary" th:href="@{/admin/fields}">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+</body>
+</html>

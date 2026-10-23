@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, '', ~{})}">
+<head><title>Users · Admin · Sports</title></head>
+<body>
+<section class="admin-layout">
+    <aside th:replace="~{admin/nav :: nav('users')}"></aside>
+    <div>
+        <div class="admin-header"><h1>Users</h1></div>
+        <div class="table-wrap card">
+            <table>
+                <thead>
+                <tr><th>Name</th><th>Email</th><th>Role</th><th></th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.fullName}">Name</td>
+                    <td th:text="${user.email}">email</td>
+                    <td>
+                        <form class="inline-form" th:action="@{/admin/users/{id}/role(id=${user.userId})}" method="post">
+                            <select name="roleName" th:aria-label="|Role of ${user.email}|">
+                                <option th:each="role : ${roles}" th:value="${role.roleName}" th:text="${role.roleName}"
+                                        th:selected="${role.roleName == user.role.roleName}">USER</option>
+                            </select>
+                            <button class="button secondary small" type="submit">Save</button>
+                        </form>
+                    </td>
+                    <td class="actions">
+                        <form th:action="@{/admin/users/{id}/delete(id=${user.userId})}" method="post"
+                              onsubmit="return confirm('Delete this user and all their orders, feedback and requests?')">
+                            <button class="button danger small" type="submit">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</section>
+</body>
+</html>

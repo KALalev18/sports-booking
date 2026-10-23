@@ -16,8 +16,9 @@
 
     <div class="grid">
         <article class="card product" th:each="product : ${products}">
-            <img th:src="@{/img/Equipment/{file}(file=${product.imagePath})}" th:alt="${product.productName}"
-                 loading="lazy">
+            <img th:if="${product.imagePath}" th:src="@{/img/Equipment/{file}(file=${product.imagePath})}"
+                 th:alt="${product.productName}" loading="lazy">
+            <div th:unless="${product.imagePath}" class="image-placeholder"></div>
             <div class="card-body">
                 <h2 th:text="${product.productName}">Football</h2>
                 <div class="price" th:text="|${#numbers.formatDecimal(product.productPrice, 1, 2)} BGN|">19.99 BGN</div>

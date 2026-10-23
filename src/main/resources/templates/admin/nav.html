@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<aside class="card sidebar" th:fragment="nav(active)">
+    <h2>Admin</h2>
+    <ul>
+        <li><a th:href="@{/admin}" th:classappend="${active == 'dashboard'} ? 'active'">Overview</a></li>
+        <li><a th:href="@{/admin/users}" th:classappend="${active == 'users'} ? 'active'">Users</a></li>
+        <li><a th:href="@{/admin/products}" th:classappend="${active == 'products'} ? 'active'">Products</a></li>
+        <li><a th:href="@{/admin/fields}" th:classappend="${active == 'fields'} ? 'active'">Facilities</a></li>
+        <li><a th:href="@{/admin/orders}" th:classappend="${active == 'orders'} ? 'active'">Orders</a></li>
+        <li><a th:href="@{/admin/contacts}" th:classappend="${active == 'contacts'} ? 'active'">Feedback</a></li>
+        <li><a th:href="@{/admin/constructions}" th:classappend="${active == 'constructions'} ? 'active'">Construction requests</a></li>
+    </ul>
+</aside>
+</body>
+</html>

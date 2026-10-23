@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, '', ~{})}">
+<head><title>Admin · Sports</title></head>
+<body>
+<section class="admin-layout">
+    <aside th:replace="~{admin/nav :: nav('dashboard')}"></aside>
+    <div>
+        <div class="admin-header"><h1>Overview</h1></div>
+        <div class="stats">
+            <a class="card stat" th:href="@{/admin/users}"><strong th:text="${userCount}">0</strong><span>Users</span></a>
+            <a class="card stat" th:href="@{/admin/products}"><strong th:text="${productCount}">0</strong><span>Products</span></a>
+            <a class="card stat" th:href="@{/admin/fields}"><strong th:text="${fieldCount}">0</strong><span>Facilities</span></a>
+            <a class="card stat" th:href="@{/admin/orders}"><strong th:text="${orderCount}">0</strong><span>Order lines</span></a>
+            <a class="card stat" th:href="@{/admin/contacts}"><strong th:text="${contactCount}">0</strong><span>Feedback</span></a>
+            <a class="card stat" th:href="@{/admin/constructions}"><strong th:text="${constructionCount}">0</strong><span>Construction requests</span></a>
+        </div>
+    </div>
+</section>
+</body>
+</html>
