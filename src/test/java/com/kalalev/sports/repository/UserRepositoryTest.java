@@ -50,8 +50,8 @@ class UserRepositoryTest {
     void rejectsASecondUserWithTheSameEmail() {
         userRepository.saveAndFlush(new User("Ana", "Ivanova", "ana@example.com", "hash", userRole));
 
-        assertThatThrownBy(() -> userRepository.saveAndFlush(
-                        new User("Ana", "Petrova", "ana@example.com", "hash", userRole)))
+        assertThatThrownBy(() ->
+                        userRepository.saveAndFlush(new User("Ana", "Petrova", "ana@example.com", "hash", userRole)))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

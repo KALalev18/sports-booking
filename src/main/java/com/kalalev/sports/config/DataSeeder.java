@@ -77,17 +77,35 @@ public class DataSeeder implements CommandLineRunner {
 
     private static List<Product> products() {
         return List.of(
-                new Product("Football", new BigDecimal("19.99"), "A quality football for matches and training.",
+                new Product(
+                        "Football",
+                        new BigDecimal("19.99"),
+                        "A quality football for matches and training.",
                         "footballball.jpg"),
-                new Product("Sports bag", new BigDecimal("39.99"), "A sports bag for carrying your kit.",
+                new Product(
+                        "Sports bag",
+                        new BigDecimal("39.99"),
+                        "A sports bag for carrying your kit.",
                         "footballsack.jpg"),
-                new Product("Basketball", new BigDecimal("12.99"), "A quality basketball for indoor and outdoor play.",
+                new Product(
+                        "Basketball",
+                        new BigDecimal("12.99"),
+                        "A quality basketball for indoor and outdoor play.",
                         "basketballball.jpg"),
-                new Product("Basketball hoop", new BigDecimal("22.99"), "A compact hoop for indoor basketball.",
+                new Product(
+                        "Basketball hoop",
+                        new BigDecimal("22.99"),
+                        "A compact hoop for indoor basketball.",
                         "koshzabasketball.jpg"),
-                new Product("Volleyball", new BigDecimal("15.99"), "A quality volleyball for matches and training.",
+                new Product(
+                        "Volleyball",
+                        new BigDecimal("15.99"),
+                        "A quality volleyball for matches and training.",
                         "voleybolnatopka.jpg"),
-                new Product("Volleyball net", new BigDecimal("59.99"), "A volleyball net for indoor or outdoor courts.",
+                new Product(
+                        "Volleyball net",
+                        new BigDecimal("59.99"),
+                        "A volleyball net for indoor or outdoor courts.",
                         "mrejazavoleybol.jpg"));
     }
 

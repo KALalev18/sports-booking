@@ -22,8 +22,18 @@ class AccessControlTest {
     private MockMvc mockMvc;
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/shop", "/facilities", "/news", "/about", "/services/tennis", "/search?q=ball",
-        "/login", "/register"})
+    @ValueSource(
+            strings = {
+                "/",
+                "/shop",
+                "/facilities",
+                "/news",
+                "/about",
+                "/services/tennis",
+                "/search?q=ball",
+                "/login",
+                "/register"
+            })
     void publicPagesOpenWithoutLogin(String url) throws Exception {
         mockMvc.perform(get(url)).andExpect(status().isOk());
     }

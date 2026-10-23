@@ -11,7 +11,8 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class FieldValidationTest {
-    private final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    private final Validator validator =
+            Validation.buildDefaultValidatorFactory().getValidator();
 
     private static Field field(LocalTime opens, LocalTime closes) {
         return new Field("Sea Garden Courts", "Varna", "Daily", opens, closes, new BigDecimal("20.00"), null, null);
@@ -19,7 +20,8 @@ class FieldValidationTest {
 
     @Test
     void acceptsAFacilityThatClosesAfterItOpens() {
-        assertThat(validator.validate(field(LocalTime.of(9, 0), LocalTime.of(18, 0)))).isEmpty();
+        assertThat(validator.validate(field(LocalTime.of(9, 0), LocalTime.of(18, 0))))
+                .isEmpty();
     }
 
     @Test

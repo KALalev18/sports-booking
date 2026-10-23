@@ -12,8 +12,19 @@ public class SecurityConfig {
 
     // Pages anyone can open; everything else needs a login, and /admin/** needs the ADMIN role
     private static final String[] PUBLIC_PATHS = {
-        "/", "/shop", "/facilities", "/news", "/about", "/services/**", "/search",
-        "/login", "/register", "/css/**", "/js/**", "/img/**", "/error"
+        "/",
+        "/shop",
+        "/facilities",
+        "/news",
+        "/about",
+        "/services/**",
+        "/search",
+        "/login",
+        "/register",
+        "/css/**",
+        "/js/**",
+        "/img/**",
+        "/error"
     };
 
     @Bean
