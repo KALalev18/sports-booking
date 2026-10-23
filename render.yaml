@@ -1,0 +1,7 @@
+# Render blueprint for the free demo: Docker image, in-memory H2 database with demo data
+services:
+  - type: web
+    name: sports-facilities
+    runtime: docker
+    plan: free
+    healthCheckPath: /
