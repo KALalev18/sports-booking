@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'about', ~{})}">
+<head><title>About · Sports</title></head>
+<body>
+<section>
+    <h1 class="page-title">About us</h1>
+    <p class="page-lead">Many towns in Bulgaria lack good sports facilities, and the ones that exist are hard to
+        find. This platform brings facilities, equipment and construction requests together in one place, so
+        people can find somewhere to play and towns can ask for the facilities they are missing.</p>
+
+    <div class="card card-body form wide">
+        <h2>Send us feedback</h2>
+        <p class="muted">Tell us how we can improve the platform.</p>
+
+        <p sec:authorize="isAnonymous()">
+            <a th:href="@{/login(next='/about')}">Log in</a> or <a th:href="@{/register}">create an account</a>
+            to send feedback.
+        </p>
+
+        <form sec:authorize="isAuthenticated()" th:action="@{/feedback}" th:object="${contact}" method="post">
+            <div class="row">
+                <div>
+                    <label for="firstName">First name</label>
+                    <input id="firstName" th:field="*{firstName}" required>
+                    <div class="field-error" th:errors="*{firstName}"></div>
+                </div>
+                <div>
+                    <label for="lastName">Last name</label>
+                    <input id="lastName" th:field="*{lastName}" required>
+                    <div class="field-error" th:errors="*{lastName}"></div>
+                </div>
+            </div>
+            <label for="phoneNumber">Phone number</label>
+            <input id="phoneNumber" type="tel" th:field="*{phoneNumber}" required>
+            <div class="field-error" th:errors="*{phoneNumber}"></div>
+
+            <label for="subject">Your feedback</label>
+            <textarea id="subject" th:field="*{subject}" maxlength="250" required></textarea>
+            <div class="field-error" th:errors="*{subject}"></div>
+
+            <div class="actions">
+                <button class="button" type="submit">Send feedback</button>
+            </div>
+        </form>
+    </div>
+</section>
+</body>
+</html>

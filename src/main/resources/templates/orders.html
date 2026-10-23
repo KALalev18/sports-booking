@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, '', ~{::script})}">
+<head><title>My orders · Sports</title></head>
+<body>
+<section>
+    <h1 class="page-title">My orders</h1>
+    <p class="page-lead">Every product you have ordered, newest first.</p>
+
+    <p th:if="${#lists.isEmpty(orders)}" class="muted">
+        You have not ordered anything yet. <a th:href="@{/shop}">Visit the shop</a>.
+    </p>
+
+    <div class="table-wrap card" th:unless="${#lists.isEmpty(orders)}">
+        <table>
+            <thead>
+            <tr>
+                <th>Date</th>
+                <th>Product</th>
+                <th class="number">Quantity</th>
+                <th class="number">Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : ${orders}">
+                <td th:text="${#temporals.format(order.orderDate, 'dd MMM yyyy, HH:mm')}">01 Jan 2023</td>
+                <td th:text="${order.product.productName}">Football</td>
+                <td class="number" th:text="${order.productQuantity}">1</td>
+                <td class="number" th:text="|${#numbers.formatDecimal(order.totalPrice, 1, 2)} BGN|">19.99 BGN</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+<script th:if="${orderPlaced}">
+    try { localStorage.removeItem("sports-cart"); } catch (e) {}
+</script>
+</body>
+</html>

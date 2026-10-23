@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'facilities', ~{})}">
+<head><title>Facilities · Sports</title></head>
+<body>
+<section>
+    <div class="shop-toolbar">
+        <div>
+            <h1 class="page-title">Facilities</h1>
+            <p class="page-lead">Sports facilities across Bulgaria, with opening hours and hourly prices.</p>
+        </div>
+        <a class="button" th:href="@{/facilities/request}">Request a new facility</a>
+    </div>
+
+    <p th:if="${#lists.isEmpty(fields)}" class="muted">No facilities have been added yet.</p>
+
+    <div class="grid">
+        <article class="card facility" th:each="field : ${fields}">
+            <img th:if="${field.imageUrl}" th:src="${field.imageUrl}" th:alt="${field.fieldName}" loading="lazy">
+            <div th:unless="${field.imageUrl}" class="image-placeholder"></div>
+            <div class="card-body">
+                <h2 th:text="${field.fieldName}">Facility name</h2>
+                <span class="tag" th:text="${field.fieldLocation}">City</span>
+                <dl>
+                    <dt>Open</dt>
+                    <dd th:text="${field.workingDays}">Monday to Friday</dd>
+                    <dt>Hours</dt>
+                    <dd th:text="|${#temporals.format(field.startedWorkingTime, 'HH:mm')} – ${#temporals.format(field.finishedWorkingTime, 'HH:mm')}|">9:00 – 20:00</dd>
+                    <dt>Price</dt>
+                    <dd th:text="${field.priceByHour != null} ? |${#numbers.formatDecimal(field.priceByHour, 1, 2)} BGN per hour| : 'Free'">50.00 BGN per hour</dd>
+                </dl>
+                <iframe th:if="${field.mapUrl}" class="map" th:src="${field.mapUrl}" loading="lazy"
+                        th:title="|Map of ${field.fieldName}|" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </article>
+    </div>
+</section>
+</body>
+</html>

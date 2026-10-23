@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, '', ~{})}">
+<head><title>Error · Sports</title></head>
+<body>
+<section>
+    <div class="card card-body auth-card">
+        <th:block th:switch="${status}">
+            <th:block th:case="404">
+                <h1 class="page-title">Page not found</h1>
+                <p class="muted">The page you were looking for does not exist.</p>
+            </th:block>
+            <th:block th:case="403">
+                <h1 class="page-title">Access denied</h1>
+                <p class="muted">You do not have permission to open this page.</p>
+            </th:block>
+            <th:block th:case="*">
+                <h1 class="page-title">Something went wrong</h1>
+                <p class="muted">Please try again in a moment.</p>
+            </th:block>
+        </th:block>
+        <a class="button" th:href="@{/}">Back to the home page</a>
+    </div>
+</section>
+</body>
+</html>

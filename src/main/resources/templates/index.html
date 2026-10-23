@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'home', ~{})}">
+<head><title>Sports · Facilities, shop and construction in Bulgaria</title></head>
+<body>
+<section>
+    <div class="hero">
+        <div>
+            <h1>Better sports facilities across Bulgaria</h1>
+            <p>Find a facility near you with its opening hours and hourly price, order sports equipment
+                from our shop, or ask us to build or rebuild a facility in your town.</p>
+            <a class="button" th:href="@{/facilities}">Browse facilities</a>
+            <a class="button secondary" th:href="@{/facilities/request}">Request a facility</a>
+        </div>
+        <img src="https://www.pomorie.bg/new/wp-content/uploads/2021/11/DSCN1331-scaled-1440x480.jpg"
+             alt="A newly built football pitch in Pomorie">
+    </div>
+
+    <div class="with-sidebar">
+        <aside class="card sidebar">
+            <h2>Our services</h2>
+            <ul>
+                <li th:each="service : ${services}">
+                    <a th:href="@{/services/{slug}(slug=${service.slug})}" th:text="${service.name}">Football pitches</a>
+                </li>
+            </ul>
+        </aside>
+        <div class="grid">
+            <div class="card card-body feature">
+                <h3>Facilities</h3>
+                <p>Every facility shows its city, working days and hours, price per hour and its location on the map.</p>
+                <a th:href="@{/facilities}">See facilities →</a>
+            </div>
+            <div class="card card-body feature">
+                <h3>Shop</h3>
+                <p>Footballs, basketballs, volleyball nets and bags. Add items to the cart and check out with your account.</p>
+                <a th:href="@{/shop}">Go to the shop →</a>
+            </div>
+            <div class="card card-body feature">
+                <h3>Build or rebuild</h3>
+                <p>Tell us what your town needs. Requests go to our team, who contact you about the next steps.</p>
+                <a th:href="@{/facilities/request}">Send a request →</a>
+            </div>
+        </div>
+    </div>
+</section>
+</body>
+</html>
