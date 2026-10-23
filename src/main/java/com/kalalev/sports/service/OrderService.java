@@ -1,15 +1,18 @@
 package com.kalalev.sports.service;
 
+import com.kalalev.sports.dto.CartItem;
 import com.kalalev.sports.model.Order;
-import org.springframework.stereotype.Service;
-
+import com.kalalev.sports.model.User;
 import java.util.List;
 
-@Service
 public interface OrderService {
+    int MAX_QUANTITY = 99;
+
     List<Order> getAllOrders();
-    Order getOrderById(int orderId);
-    void createOrder(Order order);
-    void updateOrder(Order order);
+
+    List<Order> getOrdersForUser(User user);
+
+    List<Order> placeOrder(User user, List<CartItem> items);
+
     void deleteOrderById(int orderId);
 }
