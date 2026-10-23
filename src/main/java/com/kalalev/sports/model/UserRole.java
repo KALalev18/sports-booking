@@ -5,17 +5,20 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "UserRoles")
 public class UserRole {
+    public static final String USER = "USER";
+    public static final String ADMIN = "ADMIN";
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "RoleId", columnDefinition = "int", nullable = false)
+    @Column(name = "RoleId")
     private int roleId;
-    @Column(name = "RoleName", columnDefinition = "varchar(10)", nullable = false)
+
+    @Column(name = "RoleName", length = 10, nullable = false, unique = true)
     private String roleName;
 
-    public UserRole(){}
+    public UserRole() {}
 
-    public UserRole(int roleId, String roleName) {
-        this.roleId = roleId;
+    public UserRole(String roleName) {
         this.roleName = roleName;
     }
 
@@ -27,24 +30,11 @@ public class UserRole {
         this.roleId = roleId;
     }
 
-    public String getRoleName(String roleName) {
+    public String getRoleName() {
         return roleName;
     }
 
     public void setRoleName(String roleName) {
         this.roleName = roleName;
-    }
-
-    public void checkRole(String roleName)
-    {
-        try{
-            if (roleName == "User" || roleName == "Admin")
-            {
-                throw new Exception("User has the required role.");
-            }
-            System.out.println("User does not have the required role.");
-        } catch (Exception e) {
-            System.err.println(e.getMessage());
-        }
     }
 }

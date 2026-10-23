@@ -1,39 +1,57 @@
 package com.kalalev.sports.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 
-import java.util.Objects;
-
+// A request to build a new facility or rebuild an existing one
 @Entity
 @Table(name = "Constructions")
 public class Construction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ConstructionId", columnDefinition = "int", nullable = false)
+    @Column(name = "ConstructionId")
     private int constructionId;
-    @Column(name = "FirstName", columnDefinition = "nvarchar(50)", nullable = false)
+
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "FirstName", length = 100, nullable = false)
     private String firstName;
-    @Column(name = "LastName", columnDefinition = "nvarchar(50)", nullable = false)
+
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "LastName", length = 100, nullable = false)
     private String lastName;
-    @Column(name = "PhoneNumber", columnDefinition = "nvarchar(50)", nullable = false)
+
+    @NotBlank
+    @Pattern(regexp = "^[+0-9 ()-]{6,20}$", message = "Enter a valid phone number")
+    @Column(name = "PhoneNumber", length = 100, nullable = false)
     private String phoneNumber;
-    @Column(name = "Description", columnDefinition = "varchar(250)", nullable = false)
+
+    @NotBlank
+    @Size(max = 250)
+    @Column(name = "Description", length = 250, nullable = false)
     private String description;
-    @OneToOne
-    @JoinColumn(name = "UserId")
-    @Column(name = "UserId", columnDefinition = "int", nullable = false)
-    private User userId;
 
-    public Construction(int constructionId, String firstName, String lastName, String phoneNumber, String description, User userId) {
-        this.constructionId = constructionId;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phoneNumber = phoneNumber;
-        this.description = description;
-        this.userId = userId;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "UserId", nullable = false)
+    private User user;
+
+    // Set when the request is to rebuild a facility that is already listed; null for a new facility
+    @ManyToOne
+    @JoinColumn(name = "FieldId")
+    private Field field;
+
+    @Column(name = "CreatedAt", nullable = false)
+    private LocalDateTime createdAt;
+
+    public Construction() {}
+
+    public boolean isReconstruction() {
+        return field != null;
     }
-
-    public Construction(){}
 
     public int getConstructionId() {
         return constructionId;
@@ -75,11 +93,27 @@ public class Construction {
         this.description = description;
     }
 
-    public User getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(User userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Field getField() {
+        return field;
+    }
+
+    public void setField(Field field) {
+        this.field = field;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

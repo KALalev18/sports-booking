@@ -1,38 +1,48 @@
 package com.kalalev.sports.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import java.time.LocalDateTime;
 
-import java.util.Objects;
-
+// Feedback sent through the form on the About page
 @Entity
 @Table(name = "Contacts")
 public class Contact {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ContactId", columnDefinition = "int", nullable = false)
+    @Column(name = "ContactId")
     private int contactId;
-    @Column(name = "FirstName", columnDefinition = "nvarchar(100)", nullable = false)
-    private String firstName;
-    @Column(name = "LastName", columnDefinition = "nvarchar(100)", nullable = false)
-    private String lastName;
-    @Column(name = "PhoneNumber", columnDefinition = "nvarchar(100)", nullable = false)
-    private String phoneNumber;
-    @Column(name = "Subject", columnDefinition = "varchar(250)", nullable = false)
-    private String subject;
-    @OneToOne
-    @JoinColumn(name = "UserId")
-    @Column(name = "UserId", columnDefinition = "int", nullable = false)
-    private User userId;
 
-    public Contact(int contactId, String firstName, String lastName, String phoneNumber, String subject, User userId) {
-        this.contactId = contactId;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.phoneNumber = phoneNumber;
-        this.subject = subject;
-        this.userId = userId;
-    }
-    public Contact(){}
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "FirstName", length = 100, nullable = false)
+    private String firstName;
+
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "LastName", length = 100, nullable = false)
+    private String lastName;
+
+    @NotBlank
+    @Pattern(regexp = "^[+0-9 ()-]{6,20}$", message = "Enter a valid phone number")
+    @Column(name = "PhoneNumber", length = 100, nullable = false)
+    private String phoneNumber;
+
+    @NotBlank
+    @Size(max = 250)
+    @Column(name = "Subject", length = 250, nullable = false)
+    private String subject;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "UserId", nullable = false)
+    private User user;
+
+    @Column(name = "CreatedAt", nullable = false)
+    private LocalDateTime createdAt;
+
+    public Contact() {}
 
     public int getContactId() {
         return contactId;
@@ -74,11 +84,19 @@ public class Contact {
         this.subject = subject;
     }
 
-    public User getUserId() {
-        return userId;
+    public User getUser() {
+        return user;
     }
 
-    public void setUserId(User userId) {
-        this.userId = userId;
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }

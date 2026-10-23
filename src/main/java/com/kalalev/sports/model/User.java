@@ -1,41 +1,59 @@
 package com.kalalev.sports.model;
 
 import jakarta.persistence.*;
-
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "Users")
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "UserId", columnDefinition = "int", nullable = false)
+    @Column(name = "UserId")
     private int userId;
-    @Column(name = "FirstName", columnDefinition = "nvarchar(100)", nullable = false)
-    private String firstName;
-    @Column(name = "LastName", columnDefinition = "nvarchar(100)", nullable = false)
-    private String lastName;
-    @Column(name = "Email", columnDefinition = "nvarchar(100)", nullable = false)
-    private String email;
-    @Column(name = "Password", columnDefinition = "nvarchar(100)", nullable = false)
-    private String password;
-    @ManyToOne
-    @JoinColumn(name = "RoleId")
-    @Column(name = "RoleId", columnDefinition = "int", nullable = false)
-    private UserRole roleId;
 
-    public User(int userId, String firstName, String lastName, String email, String password, UserRole roleId) {
-        this.userId = userId;
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "FirstName", length = 100, nullable = false)
+    private String firstName;
+
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "LastName", length = 100, nullable = false)
+    private String lastName;
+
+    @NotBlank
+    @Email
+    @Size(max = 100)
+    @Column(name = "Email", length = 100, nullable = false, unique = true)
+    private String email;
+
+    // BCrypt hash, never the plain-text password
+    @Column(name = "Password", length = 100, nullable = false)
+    private String password;
+
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "RoleId", nullable = false)
+    private UserRole role;
+
+    public User() {}
+
+    public User(String firstName, String lastName, String email, String password, UserRole role) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
-        this.roleId = roleId;
+        this.role = role;
     }
-    public User(){}
+
+    public boolean isAdmin() {
+        return role != null && UserRole.ADMIN.equals(role.getRoleName());
+    }
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
 
     public int getUserId() {
         return userId;
@@ -77,12 +95,11 @@ public class User {
         this.password = password;
     }
 
-    public UserRole getRoleId() {
-        return roleId;
+    public UserRole getRole() {
+        return role;
     }
 
-    public void setRoleId(UserRole roleId) {
-        this.roleId = roleId;
+    public void setRole(UserRole role) {
+        this.role = role;
     }
-
 }
