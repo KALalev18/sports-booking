@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -54,6 +55,7 @@ public class BookingService {
     private final BookingPolicy policy;
     private final FacilityAccess facilityAccess;
     private final RecurringSeriesRepository seriesRepository;
+    private final ApplicationEventPublisher events;
 
     public BookingService(
             BookingRepository bookingRepository,
@@ -61,13 +63,15 @@ public class BookingService {
             UserService userService,
             BookingPolicy policy,
             FacilityAccess facilityAccess,
-            RecurringSeriesRepository seriesRepository) {
+            RecurringSeriesRepository seriesRepository,
+            ApplicationEventPublisher events) {
         this.bookingRepository = bookingRepository;
         this.courtRepository = courtRepository;
         this.userService = userService;
         this.policy = policy;
         this.facilityAccess = facilityAccess;
         this.seriesRepository = seriesRepository;
+        this.events = events;
     }
 
     /** Holds a slot for the customer; it must be confirmed before the hold runs out. */
@@ -106,7 +110,9 @@ public class BookingService {
         }
         booking.confirm();
         flushOrConflict("Your hold expired while you were confirming it");
-        return BookingView.of(booking);
+        BookingView view = BookingView.of(booking);
+        events.publishEvent(new BookingEvents.Confirmed(view));
+        return view;
     }
 
     /**
@@ -134,7 +140,9 @@ public class BookingService {
         }
         booking.cancel();
         flushOrConflict("The booking changed while you were cancelling it. Please reload.");
-        return BookingView.of(booking);
+        BookingView view = BookingView.of(booking);
+        events.publishEvent(new BookingEvents.Cancelled(view, !owner));
+        return view;
     }
 
     /** Closes a court for maintenance. Fails if customers have booked any part of the time; cancel those first. */
