@@ -13,11 +13,6 @@ public class FacilityPageController {
         this.facilityService = facilityService;
     }
 
-    @GetMapping("/")
-    public String home() {
-        return "redirect:/facilities";
-    }
-
     @GetMapping("/facilities")
     public String facilities(Model model) {
         model.addAttribute("facilities", facilityService.listFacilities());

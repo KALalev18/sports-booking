@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'bookings', ~{})}">
+<head><title>My bookings · Sports Booking</title></head>
+<body>
+<section>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title">My bookings</h1>
+            <p class="page-lead">Free cancellation until 24 hours before the start.</p>
+        </div>
+        <a class="button secondary" th:href="@{/bookings/recurring}">Book weekly</a>
+    </div>
+
+    <h2>Upcoming</h2>
+    <p th:if="${upcoming.isEmpty()}" class="muted">Nothing booked yet. <a th:href="@{/}">Find a court</a>.</p>
+    <div class="table-wrap card" th:unless="${upcoming.isEmpty()}">
+        <table>
+            <thead>
+            <tr><th>When</th><th>Where</th><th>Sport</th><th class="number">Price</th><th>Status</th><th></th></tr>
+            </thead>
+            <tbody>
+            <tr th:each="b : ${upcoming}">
+                <td th:text="|${#temporals.format(b.localStart(), 'EEE d MMM, HH:mm')}–${#temporals.format(b.localEnd(), 'HH:mm')}|">Tue 2 Jun, 18:00–20:00</td>
+                <td th:text="|${b.facilityName}, ${b.courtName}|">Arena, Court 1</td>
+                <td th:text="${b.sport.displayName()}">Tennis</td>
+                <td class="number" th:text="|€${#numbers.formatDecimal(b.price, 1, 2)}|">€40.00</td>
+                <td>
+                    <span class="status" th:classappend="${#strings.toLowerCase(b.status.name())}"
+                          th:text="${#strings.capitalize(#strings.toLowerCase(b.status.name()))}">Confirmed</span>
+                    <span class="tag" th:if="${b.seriesId != null}">Weekly</span>
+                </td>
+                <td class="actions">
+                    <a th:if="${b.status.name() == 'HELD'}" class="button small" th:href="@{/bookings/{id}(id=${b.id})}">Confirm</a>
+                    <form th:if="${b.status.name() == 'HELD' or b.start.isAfter(cancelCutoff)}"
+                          th:action="@{/bookings/{id}/cancel(id=${b.id})}" method="post">
+                        <button class="button secondary small" type="submit">Cancel</button>
+                    </form>
+                    <span th:unless="${b.status.name() == 'HELD' or b.start.isAfter(cancelCutoff)}" class="muted">
+                        Too late to cancel</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>Past and cancelled</h2>
+    <p th:if="${past.isEmpty()}" class="muted">None yet.</p>
+    <div class="table-wrap card" th:unless="${past.isEmpty()}">
+        <table>
+            <tbody>
+            <tr th:each="b : ${past}">
+                <td th:text="${#temporals.format(b.localStart(), 'EEE d MMM yyyy, HH:mm')}">Tue 2 Jun 2026, 18:00</td>
+                <td th:text="|${b.facilityName}, ${b.courtName}|">Arena, Court 1</td>
+                <td><span class="status" th:classappend="${#strings.toLowerCase(b.status.name())}"
+                          th:text="${#strings.capitalize(#strings.toLowerCase(b.status.name()))}">Cancelled</span></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+</body>
+</html>

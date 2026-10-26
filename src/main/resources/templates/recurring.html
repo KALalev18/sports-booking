@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'bookings', ~{})}">
+<head><title>Book weekly · Sports Booking</title></head>
+<body>
+<section>
+    <h1 class="page-title">Book the same time every week</h1>
+    <p class="page-lead">For teams and regular players. Every free week is booked straight away; weeks that are
+        already taken are listed so you can pick another time for them.</p>
+
+    <form class="card card-body form" th:action="@{/bookings/recurring}" method="post">
+        <label for="courtId">Court</label>
+        <select id="courtId" name="courtId" required>
+            <optgroup th:each="f : ${facilities}" th:label="|${f.name} (${f.city})|">
+                <option th:each="c : ${f.courts}" th:value="${c.id}"
+                        th:text="|${c.name} · ${c.sport.displayName()} · €${#numbers.formatDecimal(c.pricePerHour, 1, 2)}/h|">
+                    Court 1</option>
+            </optgroup>
+        </select>
+        <div class="row">
+            <div>
+                <label for="firstDate">First day</label>
+                <input id="firstDate" type="date" name="firstDate" th:value="${firstDate}" required>
+            </div>
+            <div>
+                <label for="start">Start time</label>
+                <input id="start" type="time" name="start" step="3600" value="18:00" required>
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <label for="hours">Hours</label>
+                <select id="hours" name="hours">
+                    <option value="1">1</option>
+                    <option value="2" selected>2</option>
+                    <option value="3">3</option>
+                </select>
+            </div>
+            <div>
+                <label for="weeks">Weeks</label>
+                <input id="weeks" type="number" name="weeks" th:min="${minWeeks}" th:max="${maxWeeks}" value="10" required>
+            </div>
+        </div>
+        <div class="actions">
+            <button class="button" type="submit">Book weekly</button>
+        </div>
+    </form>
+</section>
+</body>
+</html>
