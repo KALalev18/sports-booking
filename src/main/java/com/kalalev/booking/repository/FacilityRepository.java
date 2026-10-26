@@ -10,4 +10,6 @@ public interface FacilityRepository extends JpaRepository<Facility, Long> {
     List<String> findCities();
 
     List<Facility> findAllByOrderByCityAscNameAsc();
+
+    List<Facility> findByManagerEmailOrderByName(String email);
 }

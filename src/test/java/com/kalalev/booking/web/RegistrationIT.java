@@ -10,9 +10,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
 import com.kalalev.booking.IntegrationTest;
+import com.kalalev.booking.TestData;
 import com.kalalev.booking.domain.AppUser;
 import com.kalalev.booking.domain.Role;
 import com.kalalev.booking.repository.AppUserRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -28,6 +30,14 @@ class RegistrationIT {
 
     @Autowired
     private AppUserRepository userRepository;
+
+    @Autowired
+    private TestData data;
+
+    @BeforeEach
+    void setUp() {
+        data.reset();
+    }
 
     @Test
     void registersACustomerWithAHashedPassword() throws Exception {
