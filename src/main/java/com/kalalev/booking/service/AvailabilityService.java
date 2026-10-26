@@ -7,6 +7,7 @@ import com.kalalev.booking.domain.Sport;
 import com.kalalev.booking.domain.TimeSlot;
 import com.kalalev.booking.repository.BookingRepository;
 import com.kalalev.booking.repository.CourtRepository;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -23,7 +24,31 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AvailabilityService {
 
-    public record CourtAvailability(Court court, List<LocalTime> freeStarts) {}
+    public record CourtAvailability(
+            long courtId,
+            String courtName,
+            Sport sport,
+            BigDecimal pricePerHour,
+            long facilityId,
+            String facilityName,
+            String city,
+            String address,
+            List<LocalTime> freeStarts) {
+
+        static CourtAvailability of(Court court, List<LocalTime> freeStarts) {
+            Facility facility = court.getFacility();
+            return new CourtAvailability(
+                    court.getId(),
+                    court.getName(),
+                    court.getSport(),
+                    court.getPricePerHour(),
+                    facility.getId(),
+                    facility.getName(),
+                    facility.getCity(),
+                    facility.getAddress(),
+                    freeStarts);
+        }
+    }
 
     private final CourtRepository courtRepository;
     private final BookingRepository bookingRepository;
@@ -65,7 +90,7 @@ public class AvailabilityService {
         List<CourtAvailability> result = new ArrayList<>();
         for (Court court : courts) {
             List<TimeSlot> occupied = occupiedByCourt.getOrDefault(court.getId(), List.of());
-            result.add(new CourtAvailability(court, freeStarts(court.getFacility(), date, occupied, now)));
+            result.add(CourtAvailability.of(court, freeStarts(court.getFacility(), date, occupied, now)));
         }
         return result;
     }

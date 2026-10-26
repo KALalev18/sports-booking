@@ -64,23 +64,23 @@ class HoldExpiryJobIT {
 
     @Test
     void releasesOnlyHoldsWhoseTimeRanOut() {
-        Booking old = bookingService.hold("ana@example.com", court, TOMORROW, LocalTime.of(10, 0), 1);
+        BookingView old = bookingService.hold("ana@example.com", court, TOMORROW, LocalTime.of(10, 0), 1);
         clock.advance(Duration.ofMinutes(6));
-        Booking fresh = bookingService.hold("ana@example.com", court, TOMORROW, LocalTime.of(11, 0), 1);
+        BookingView fresh = bookingService.hold("ana@example.com", court, TOMORROW, LocalTime.of(11, 0), 1);
         clock.advance(Duration.ofMinutes(5));
 
         assertThat(job.expireRunOutHolds()).isEqualTo(1);
-        assertThat(bookingRepository.findById(old.getId()).orElseThrow().getStatus())
+        assertThat(bookingRepository.findById(old.id()).orElseThrow().getStatus())
                 .isEqualTo(BookingStatus.EXPIRED);
-        assertThat(bookingRepository.findById(fresh.getId()).orElseThrow().getStatus())
+        assertThat(bookingRepository.findById(fresh.id()).orElseThrow().getStatus())
                 .isEqualTo(BookingStatus.HELD);
     }
 
     @Test
     void aConfirmBasedOnAStaleReadLosesToTheJob() {
-        Booking hold = bookingService.hold("ana@example.com", court, TOMORROW, LocalTime.of(10, 0), 1);
+        BookingView hold = bookingService.hold("ana@example.com", court, TOMORROW, LocalTime.of(10, 0), 1);
         // A copy read before the job ran, as a slow confirm request would have it
-        Booking staleCopy = bookingRepository.findById(hold.getId()).orElseThrow();
+        Booking staleCopy = bookingRepository.findById(hold.id()).orElseThrow();
 
         clock.advance(Duration.ofMinutes(10));
         job.expireRunOutHolds();
@@ -88,7 +88,7 @@ class HoldExpiryJobIT {
         staleCopy.confirm();
         assertThatThrownBy(() -> bookingRepository.saveAndFlush(staleCopy))
                 .isInstanceOf(ObjectOptimisticLockingFailureException.class);
-        assertThat(bookingRepository.findById(hold.getId()).orElseThrow().getStatus())
+        assertThat(bookingRepository.findById(hold.id()).orElseThrow().getStatus())
                 .isEqualTo(BookingStatus.EXPIRED);
     }
 }

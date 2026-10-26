@@ -7,7 +7,6 @@ import com.kalalev.booking.IntegrationTest;
 import com.kalalev.booking.MutableClock;
 import com.kalalev.booking.TestData;
 import com.kalalev.booking.TestcontainersConfig;
-import com.kalalev.booking.domain.Booking;
 import com.kalalev.booking.domain.BookingStatus;
 import com.kalalev.booking.service.BookingException.Reason;
 import java.time.Duration;
@@ -58,15 +57,15 @@ class BookingServiceIT {
 
     @Test
     void holdsAndConfirmsASlot() {
-        Booking held = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 2);
+        BookingView held = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 2);
 
-        assertThat(held.getStatus()).isEqualTo(BookingStatus.HELD);
-        assertThat(held.getPrice()).isEqualByComparingTo("40.00");
-        assertThat(held.getHoldExpiresAt()).isEqualTo(clock.instant().plus(Duration.ofMinutes(10)));
+        assertThat(held.status()).isEqualTo(BookingStatus.HELD);
+        assertThat(held.price()).isEqualByComparingTo("40.00");
+        assertThat(held.holdExpiresAt()).isEqualTo(clock.instant().plus(Duration.ofMinutes(10)));
 
-        Booking confirmed = bookingService.confirm("ana@example.com", held.getId());
-        assertThat(confirmed.getStatus()).isEqualTo(BookingStatus.CONFIRMED);
-        assertThat(confirmed.getHoldExpiresAt()).isNull();
+        BookingView confirmed = bookingService.confirm("ana@example.com", held.id());
+        assertThat(confirmed.status()).isEqualTo(BookingStatus.CONFIRMED);
+        assertThat(confirmed.holdExpiresAt()).isNull();
     }
 
     @Test
@@ -81,36 +80,36 @@ class BookingServiceIT {
     @Test
     void backToBackSlotsDoNotConflict() {
         bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1);
-        Booking next = bookingService.hold("boris@example.com", court, TOMORROW, LocalTime.of(19, 0), 1);
+        BookingView next = bookingService.hold("boris@example.com", court, TOMORROW, LocalTime.of(19, 0), 1);
 
-        assertThat(next.getStatus()).isEqualTo(BookingStatus.HELD);
+        assertThat(next.status()).isEqualTo(BookingStatus.HELD);
         assertThat(data.activeBookingsOn(court)).isEqualTo(2);
     }
 
     @Test
     void aRunOutHoldFreesTheSlotAndCanNoLongerBeConfirmed() {
-        Booking anasHold = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1);
+        BookingView anasHold = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1);
 
         clock.advance(Duration.ofMinutes(10));
-        Booking borisHold = bookingService.hold("boris@example.com", court, TOMORROW, SIX_PM, 1);
+        BookingView borisHold = bookingService.hold("boris@example.com", court, TOMORROW, SIX_PM, 1);
 
-        assertThat(borisHold.getStatus()).isEqualTo(BookingStatus.HELD);
-        assertReason(() -> bookingService.confirm("ana@example.com", anasHold.getId()), Reason.HOLD_EXPIRED);
+        assertThat(borisHold.status()).isEqualTo(BookingStatus.HELD);
+        assertReason(() -> bookingService.confirm("ana@example.com", anasHold.id()), Reason.HOLD_EXPIRED);
     }
 
     @Test
     void anExpiredHoldThatNobodyTookCannotBeConfirmed() {
-        Booking hold = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1);
+        BookingView hold = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1);
         clock.advance(Duration.ofMinutes(11));
 
-        assertReason(() -> bookingService.confirm("ana@example.com", hold.getId()), Reason.HOLD_EXPIRED);
+        assertReason(() -> bookingService.confirm("ana@example.com", hold.id()), Reason.HOLD_EXPIRED);
     }
 
     @Test
     void customersCannotConfirmSomeoneElsesHold() {
-        Booking hold = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1);
+        BookingView hold = bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1);
 
-        assertThatThrownBy(() -> bookingService.confirm("boris@example.com", hold.getId()))
+        assertThatThrownBy(() -> bookingService.confirm("boris@example.com", hold.id()))
                 .isInstanceOf(NotFoundException.class);
     }
 
@@ -127,48 +126,48 @@ class BookingServiceIT {
 
     @Test
     void customersCanCancelUntil24HoursBeforeTheStart() {
-        Booking early = confirmed("ana@example.com", IN_A_WEEK, SIX_PM);
-        Booking soon = confirmed("ana@example.com", TODAY, SIX_PM);
+        BookingView early = confirmed("ana@example.com", IN_A_WEEK, SIX_PM);
+        BookingView soon = confirmed("ana@example.com", TODAY, SIX_PM);
 
         assertThat(bookingService
-                        .cancel(auth("ana@example.com", "CUSTOMER"), early.getId())
-                        .getStatus())
+                        .cancel(auth("ana@example.com", "CUSTOMER"), early.id())
+                        .status())
                 .isEqualTo(BookingStatus.CANCELLED);
         assertReason(
-                () -> bookingService.cancel(auth("ana@example.com", "CUSTOMER"), soon.getId()),
+                () -> bookingService.cancel(auth("ana@example.com", "CUSTOMER"), soon.id()),
                 Reason.CANCELLATION_WINDOW_CLOSED);
     }
 
     @Test
     void aCancelledSlotCanBeBookedAgain() {
-        Booking booking = confirmed("ana@example.com", IN_A_WEEK, SIX_PM);
-        bookingService.cancel(auth("ana@example.com", "CUSTOMER"), booking.getId());
+        BookingView booking = confirmed("ana@example.com", IN_A_WEEK, SIX_PM);
+        bookingService.cancel(auth("ana@example.com", "CUSTOMER"), booking.id());
 
         assertThat(bookingService
                         .hold("boris@example.com", court, IN_A_WEEK, SIX_PM, 1)
-                        .getStatus())
+                        .status())
                 .isEqualTo(BookingStatus.HELD);
     }
 
     @Test
     void theFacilityManagerCanCancelLateButOtherManagersCannotSeeTheBooking() {
-        Booking soon = confirmed("ana@example.com", TODAY, SIX_PM);
+        BookingView soon = confirmed("ana@example.com", TODAY, SIX_PM);
 
-        assertThatThrownBy(() -> bookingService.cancel(auth("other.manager@example.com", "MANAGER"), soon.getId()))
+        assertThatThrownBy(() -> bookingService.cancel(auth("other.manager@example.com", "MANAGER"), soon.id()))
                 .isInstanceOf(NotFoundException.class);
         assertThat(bookingService
-                        .cancel(auth("manager@example.com", "MANAGER"), soon.getId())
-                        .getStatus())
+                        .cancel(auth("manager@example.com", "MANAGER"), soon.id())
+                        .status())
                 .isEqualTo(BookingStatus.CANCELLED);
     }
 
     @Test
     void maintenanceBlocksStopCustomersFromBooking() {
         actAs("manager@example.com", "MANAGER");
-        Booking block =
+        BookingView block =
                 bookingService.block("manager@example.com", court, TOMORROW, LocalTime.of(8, 0), 14, "Resurfacing");
 
-        assertThat(block.getPrice()).isEqualByComparingTo("0");
+        assertThat(block.price()).isEqualByComparingTo("0");
         assertReason(() -> bookingService.hold("ana@example.com", court, TOMORROW, SIX_PM, 1), Reason.SLOT_UNAVAILABLE);
     }
 
@@ -196,13 +195,13 @@ class BookingServiceIT {
         confirmed("ana@example.com", TOMORROW, SIX_PM);
         confirmed("ana@example.com", IN_A_WEEK, SIX_PM);
 
-        List<Booking> bookings = bookingService.bookingsFor("ana@example.com");
-        assertThat(bookings).extracting(Booking::getStartTime).isSortedAccordingTo((a, b) -> b.compareTo(a));
+        List<BookingView> bookings = bookingService.bookingsFor("ana@example.com");
+        assertThat(bookings).extracting(BookingView::start).isSortedAccordingTo((a, b) -> b.compareTo(a));
     }
 
-    private Booking confirmed(String email, LocalDate date, LocalTime start) {
-        Booking hold = bookingService.hold(email, court, date, start, 1);
-        return bookingService.confirm(email, hold.getId());
+    private BookingView confirmed(String email, LocalDate date, LocalTime start) {
+        BookingView hold = bookingService.hold(email, court, date, start, 1);
+        return bookingService.confirm(email, hold.id());
     }
 
     private static Authentication auth(String email, String role) {

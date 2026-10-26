@@ -14,6 +14,7 @@ import com.kalalev.booking.domain.RecurringSeries;
 import com.kalalev.booking.domain.TimeSlot;
 import com.kalalev.booking.repository.BookingRepository;
 import com.kalalev.booking.repository.CourtRepository;
+import com.kalalev.booking.repository.RecurringSeriesRepository;
 import com.kalalev.booking.security.FacilityAccess;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -52,23 +53,26 @@ public class BookingService {
     private final UserService userService;
     private final BookingPolicy policy;
     private final FacilityAccess facilityAccess;
+    private final RecurringSeriesRepository seriesRepository;
 
     public BookingService(
             BookingRepository bookingRepository,
             CourtRepository courtRepository,
             UserService userService,
             BookingPolicy policy,
-            FacilityAccess facilityAccess) {
+            FacilityAccess facilityAccess,
+            RecurringSeriesRepository seriesRepository) {
         this.bookingRepository = bookingRepository;
         this.courtRepository = courtRepository;
         this.userService = userService;
         this.policy = policy;
         this.facilityAccess = facilityAccess;
+        this.seriesRepository = seriesRepository;
     }
 
     /** Holds a slot for the customer; it must be confirmed before the hold runs out. */
     @Transactional
-    public Booking hold(String email, long courtId, LocalDate date, LocalTime start, int hours) {
+    public BookingView hold(String email, long courtId, LocalDate date, LocalTime start, int hours) {
         AppUser customer = userService.getByEmail(email);
         Court court = lockCourt(courtId);
         TimeSlot slot = policy.customerSlot(court, date, start, hours);
@@ -79,11 +83,12 @@ public class BookingService {
                     TOO_MANY_HOLDS, "You can hold at most " + policy.maxActiveHolds() + " slots at a time");
         }
         bookingRepository.expireRunOutHolds(courtId, slot.start(), slot.end(), now);
-        return insert(Booking.hold(court, customer, slot, policy.price(court, slot), policy.holdExpiry(), now));
+        return BookingView.of(
+                insert(Booking.hold(court, customer, slot, policy.price(court, slot), policy.holdExpiry(), now)));
     }
 
     @Transactional
-    public Booking confirm(String email, long bookingId) {
+    public BookingView confirm(String email, long bookingId) {
         Booking booking = findBooking(bookingId);
         if (!booking.getUser().getEmail().equals(email)) {
             throw new NotFoundException("No booking " + bookingId);
@@ -101,7 +106,7 @@ public class BookingService {
         }
         booking.confirm();
         flushOrConflict("Your hold expired while you were confirming it");
-        return booking;
+        return BookingView.of(booking);
     }
 
     /**
@@ -109,7 +114,7 @@ public class BookingService {
      * closes. Managers of the facility and admins can cancel any active booking there, for example for bad weather.
      */
     @Transactional
-    public Booking cancel(Authentication authentication, long bookingId) {
+    public BookingView cancel(Authentication authentication, long bookingId) {
         Booking booking = findBooking(bookingId);
         boolean owner = booking.getUser().getEmail().equals(authentication.getName());
         boolean staff = facilityAccess.canManage(booking.getCourt().getFacility(), authentication);
@@ -129,13 +134,14 @@ public class BookingService {
         }
         booking.cancel();
         flushOrConflict("The booking changed while you were cancelling it. Please reload.");
-        return booking;
+        return BookingView.of(booking);
     }
 
     /** Closes a court for maintenance. Fails if customers have booked any part of the time; cancel those first. */
     @PreAuthorize("@facilityAccess.canManageCourt(#courtId, authentication)")
     @Transactional
-    public Booking block(String managerEmail, long courtId, LocalDate date, LocalTime start, int hours, String note) {
+    public BookingView block(
+            String managerEmail, long courtId, LocalDate date, LocalTime start, int hours, String note) {
         AppUser manager = userService.getByEmail(managerEmail);
         Court court = lockCourt(courtId);
         TimeSlot slot = policy.slotFor(court, date, start, hours, 24);
@@ -147,7 +153,7 @@ public class BookingService {
             throw new BookingException(
                     SLOT_UNAVAILABLE, overlapping.size() + " booking(s) overlap this time. Cancel them first.");
         }
-        return insert(Booking.maintenance(court, manager, slot, note, now));
+        return BookingView.of(insert(Booking.maintenance(court, manager, slot, note, now)));
     }
 
     /**
@@ -155,26 +161,30 @@ public class BookingService {
      * Called by {@link RecurringBookingService}.
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public Booking bookOccurrence(RecurringSeries series, LocalDate date) {
+    public BookingView bookOccurrence(long seriesId, LocalDate date) {
+        RecurringSeries series =
+                seriesRepository.findById(seriesId).orElseThrow(() -> new NotFoundException("No series " + seriesId));
         Court court = lockCourt(series.getCourt().getId());
         TimeSlot slot = policy.customerSlot(court, date, series.getStartLocal(), series.getHours());
         Instant now = policy.now();
         bookingRepository.expireRunOutHolds(court.getId(), slot.start(), slot.end(), now);
-        return insert(Booking.occurrence(series, slot, policy.price(court, slot), now));
+        return BookingView.of(insert(Booking.occurrence(series, slot, policy.price(court, slot), now)));
     }
 
     @Transactional(readOnly = true)
-    public List<Booking> bookingsFor(String email) {
-        return bookingRepository.findForUser(userService.getByEmail(email));
+    public List<BookingView> bookingsFor(String email) {
+        return bookingRepository.findForUser(userService.getByEmail(email)).stream()
+                .map(BookingView::of)
+                .toList();
     }
 
     @Transactional(readOnly = true)
-    public Booking getForCustomer(String email, long bookingId) {
+    public BookingView getForCustomer(String email, long bookingId) {
         Booking booking = findBooking(bookingId);
         if (!booking.getUser().getEmail().equals(email)) {
             throw new NotFoundException("No booking " + bookingId);
         }
-        return booking;
+        return BookingView.of(booking);
     }
 
     private Booking insert(Booking booking) {

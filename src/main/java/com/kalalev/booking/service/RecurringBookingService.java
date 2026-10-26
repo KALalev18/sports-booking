@@ -1,7 +1,6 @@
 package com.kalalev.booking.service;
 
 import com.kalalev.booking.domain.AppUser;
-import com.kalalev.booking.domain.Booking;
 import com.kalalev.booking.domain.Court;
 import com.kalalev.booking.domain.RecurringSeries;
 import com.kalalev.booking.repository.CourtRepository;
@@ -80,8 +79,8 @@ public class RecurringBookingService {
         for (int week = 0; week < weeks; week++) {
             LocalDate date = firstDate.plusWeeks(week);
             try {
-                Booking booking = bookingService.bookOccurrence(series, date);
-                occurrences.add(new Occurrence(date, Outcome.BOOKED, "Booked", booking.getId()));
+                BookingView booking = bookingService.bookOccurrence(series.getId(), date);
+                occurrences.add(new Occurrence(date, Outcome.BOOKED, "Booked", booking.id()));
             } catch (BookingException e) {
                 Outcome outcome = e.getReason() == BookingException.Reason.SLOT_UNAVAILABLE
                         ? Outcome.CONFLICT
