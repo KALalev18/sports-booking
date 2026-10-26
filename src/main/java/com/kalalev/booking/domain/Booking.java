@@ -53,6 +53,10 @@ public class Booking {
     @Column(length = 200)
     private String note;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "series_id")
+    private RecurringSeries series;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -92,6 +96,13 @@ public class Booking {
     /** Books a slot straight away, without a hold; used for recurring bookings. */
     public static Booking confirmed(Court court, AppUser user, TimeSlot slot, BigDecimal price, Instant now) {
         return new Booking(court, user, BookingType.CUSTOMER, BookingStatus.CONFIRMED, slot, price, null, null, now);
+    }
+
+    /** One week of a recurring series, booked straight away without a hold. */
+    public static Booking occurrence(RecurringSeries series, TimeSlot slot, BigDecimal price, Instant now) {
+        Booking booking = confirmed(series.getCourt(), series.getUser(), slot, price, now);
+        booking.series = series;
+        return booking;
     }
 
     public static Booking maintenance(Court court, AppUser manager, TimeSlot slot, String note, Instant now) {
@@ -163,6 +174,10 @@ public class Booking {
 
     public Instant getHoldExpiresAt() {
         return holdExpiresAt;
+    }
+
+    public RecurringSeries getSeries() {
+        return series;
     }
 
     public String getNote() {

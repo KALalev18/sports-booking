@@ -18,7 +18,7 @@ public class TestData {
     }
 
     public void reset() {
-        jdbc.execute("TRUNCATE booking, court, facility, app_user RESTART IDENTITY CASCADE");
+        jdbc.execute("TRUNCATE booking, recurring_series, court, facility, app_user RESTART IDENTITY CASCADE");
     }
 
     public long user(String email, String role) {

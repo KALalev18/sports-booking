@@ -3,6 +3,7 @@ package com.kalalev.booking.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.kalalev.booking.IntegrationTest;
 import com.kalalev.booking.MutableClock;
 import com.kalalev.booking.TestData;
 import com.kalalev.booking.TestcontainersConfig;
@@ -17,16 +18,13 @@ import org.assertj.core.api.ThrowableAssert.ThrowingCallable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-@SpringBootTest
-@Import(TestcontainersConfig.class)
+@IntegrationTest
 class BookingServiceIT {
     // The test clock starts on 1 June 2026 at 09:00 in the facility's time zone
     private static final LocalDate TODAY = LocalDate.of(2026, 6, 1);
@@ -97,7 +95,7 @@ class BookingServiceIT {
         Booking borisHold = bookingService.hold("boris@example.com", court, TOMORROW, SIX_PM, 1);
 
         assertThat(borisHold.getStatus()).isEqualTo(BookingStatus.HELD);
-        assertReason(() -> bookingService.confirm("ana@example.com", anasHold.getId()), Reason.INVALID_STATE);
+        assertReason(() -> bookingService.confirm("ana@example.com", anasHold.getId()), Reason.HOLD_EXPIRED);
     }
 
     @Test

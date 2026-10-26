@@ -10,6 +10,7 @@ import com.kalalev.booking.domain.AppUser;
 import com.kalalev.booking.domain.Booking;
 import com.kalalev.booking.domain.BookingStatus;
 import com.kalalev.booking.domain.Court;
+import com.kalalev.booking.domain.RecurringSeries;
 import com.kalalev.booking.domain.TimeSlot;
 import com.kalalev.booking.repository.BookingRepository;
 import com.kalalev.booking.repository.CourtRepository;
@@ -24,6 +25,7 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -86,6 +88,9 @@ public class BookingService {
         if (!booking.getUser().getEmail().equals(email)) {
             throw new NotFoundException("No booking " + bookingId);
         }
+        if (booking.getStatus() == BookingStatus.EXPIRED) {
+            throw new BookingException(HOLD_EXPIRED, "Your hold has expired. The slot may still be free.");
+        }
         if (booking.getStatus() != BookingStatus.HELD) {
             throw new BookingException(
                     INVALID_STATE,
@@ -143,6 +148,19 @@ public class BookingService {
                     SLOT_UNAVAILABLE, overlapping.size() + " booking(s) overlap this time. Cancel them first.");
         }
         return insert(Booking.maintenance(court, manager, slot, note, now));
+    }
+
+    /**
+     * Books one week of a recurring series in its own transaction, so a clash in week 3 does not undo weeks 1 and 2.
+     * Called by {@link RecurringBookingService}.
+     */
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public Booking bookOccurrence(RecurringSeries series, LocalDate date) {
+        Court court = lockCourt(series.getCourt().getId());
+        TimeSlot slot = policy.customerSlot(court, date, series.getStartLocal(), series.getHours());
+        Instant now = policy.now();
+        bookingRepository.expireRunOutHolds(court.getId(), slot.start(), slot.end(), now);
+        return insert(Booking.occurrence(series, slot, policy.price(court, slot), now));
     }
 
     @Transactional(readOnly = true)
