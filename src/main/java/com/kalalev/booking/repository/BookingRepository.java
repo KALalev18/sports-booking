@@ -49,6 +49,14 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("to") Instant to,
             @Param("now") Instant now);
 
+    /** Releases every hold whose time has run out. Used by the scheduled expiry job. */
+    @Modifying
+    @Query(nativeQuery = true, value = """
+            UPDATE booking SET status = 'EXPIRED', hold_expires_at = NULL, version = version + 1
+            WHERE status = 'HELD' AND hold_expires_at <= :now
+            """)
+    int expireAllRunOutHolds(@Param("now") Instant now);
+
     @Query("""
             select count(b) from Booking b
             where b.user = :user and b.status = com.kalalev.booking.domain.BookingStatus.HELD
