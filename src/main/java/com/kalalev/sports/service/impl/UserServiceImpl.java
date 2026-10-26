@@ -5,9 +5,6 @@ import com.kalalev.sports.exception.EmailAlreadyUsedException;
 import com.kalalev.sports.exception.NotFoundException;
 import com.kalalev.sports.model.User;
 import com.kalalev.sports.model.UserRole;
-import com.kalalev.sports.repository.ConstructionRepository;
-import com.kalalev.sports.repository.ContactRepository;
-import com.kalalev.sports.repository.OrderRepository;
 import com.kalalev.sports.repository.UserRepository;
 import com.kalalev.sports.service.RoleService;
 import com.kalalev.sports.service.UserService;
@@ -19,23 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    private final OrderRepository orderRepository;
-    private final ContactRepository contactRepository;
-    private final ConstructionRepository constructionRepository;
     private final RoleService roleService;
     private final PasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(
-            UserRepository userRepository,
-            OrderRepository orderRepository,
-            ContactRepository contactRepository,
-            ConstructionRepository constructionRepository,
-            RoleService roleService,
-            PasswordEncoder passwordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, RoleService roleService, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
-        this.orderRepository = orderRepository;
-        this.contactRepository = contactRepository;
-        this.constructionRepository = constructionRepository;
         this.roleService = roleService;
         this.passwordEncoder = passwordEncoder;
     }
@@ -82,14 +67,10 @@ public class UserServiceImpl implements UserService {
         user.setRole(roleService.getRoleByName(roleName));
     }
 
-    // Removes the user's orders, feedback and requests first, since they reference the user
     @Override
     @Transactional
     public void deleteUserById(int userId) {
         User user = getUserById(userId);
-        orderRepository.deleteByUser(user);
-        contactRepository.deleteByUser(user);
-        constructionRepository.deleteByUser(user);
         userRepository.delete(user);
     }
 }

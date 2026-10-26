@@ -1,11 +1,9 @@
 package com.kalalev.sports.config;
 
 import com.kalalev.sports.model.Field;
-import com.kalalev.sports.model.Product;
 import com.kalalev.sports.model.User;
 import com.kalalev.sports.model.UserRole;
 import com.kalalev.sports.repository.FieldRepository;
-import com.kalalev.sports.repository.ProductRepository;
 import com.kalalev.sports.repository.UserRepository;
 import com.kalalev.sports.repository.UserRoleRepository;
 import java.math.BigDecimal;
@@ -18,7 +16,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Fills an empty database with the two roles, a demo admin and user, and the products and facilities
+ * Fills an empty database with the two roles, a demo admin and user, and the facilities
  * from the original version of the site. Each part only runs when its table is empty, so restarting
  * against a real database does not create duplicates.
  */
@@ -26,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 public class DataSeeder implements CommandLineRunner {
     private final UserRoleRepository roleRepository;
     private final UserRepository userRepository;
-    private final ProductRepository productRepository;
     private final FieldRepository fieldRepository;
     private final PasswordEncoder passwordEncoder;
     private final String adminEmail;
@@ -37,7 +34,6 @@ public class DataSeeder implements CommandLineRunner {
     public DataSeeder(
             UserRoleRepository roleRepository,
             UserRepository userRepository,
-            ProductRepository productRepository,
             FieldRepository fieldRepository,
             PasswordEncoder passwordEncoder,
             @Value("${app.demo.admin-email}") String adminEmail,
@@ -46,7 +42,6 @@ public class DataSeeder implements CommandLineRunner {
             @Value("${app.demo.user-password}") String userPassword) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
-        this.productRepository = productRepository;
         this.fieldRepository = fieldRepository;
         this.passwordEncoder = passwordEncoder;
         this.adminEmail = adminEmail;
@@ -67,46 +62,9 @@ public class DataSeeder implements CommandLineRunner {
             userRepository.save(new User("Demo", "Admin", adminEmail, passwordEncoder.encode(adminPassword), admin));
             userRepository.save(new User("Demo", "User", userEmail, passwordEncoder.encode(userPassword), user));
         }
-        if (productRepository.count() == 0) {
-            productRepository.saveAll(products());
-        }
         if (fieldRepository.count() == 0) {
             fieldRepository.saveAll(fields());
         }
-    }
-
-    private static List<Product> products() {
-        return List.of(
-                new Product(
-                        "Football",
-                        new BigDecimal("19.99"),
-                        "A quality football for matches and training.",
-                        "footballball.jpg"),
-                new Product(
-                        "Sports bag",
-                        new BigDecimal("39.99"),
-                        "A sports bag for carrying your kit.",
-                        "footballsack.jpg"),
-                new Product(
-                        "Basketball",
-                        new BigDecimal("12.99"),
-                        "A quality basketball for indoor and outdoor play.",
-                        "basketballball.jpg"),
-                new Product(
-                        "Basketball hoop",
-                        new BigDecimal("22.99"),
-                        "A compact hoop for indoor basketball.",
-                        "koshzabasketball.jpg"),
-                new Product(
-                        "Volleyball",
-                        new BigDecimal("15.99"),
-                        "A quality volleyball for matches and training.",
-                        "voleybolnatopka.jpg"),
-                new Product(
-                        "Volleyball net",
-                        new BigDecimal("59.99"),
-                        "A volleyball net for indoor or outdoor courts.",
-                        "mrejazavoleybol.jpg"));
     }
 
     private static List<Field> fields() {

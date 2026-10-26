@@ -11,11 +11,6 @@
 <header class="site-header">
     <div class="container">
         <a class="brand" th:href="@{/}">Sports</a>
-        <form class="search" th:action="@{/search}" method="get" role="search">
-            <input type="search" name="q" th:value="${query}" placeholder="Search facilities and products..."
-                   aria-label="Search facilities and products">
-            <button type="submit">Search</button>
-        </form>
         <div class="account">
             <th:block sec:authorize="isAnonymous()">
                 <a th:href="@{/login}">Log in</a>
@@ -23,7 +18,6 @@
             </th:block>
             <th:block sec:authorize="isAuthenticated()">
                 <span class="greeting" sec:authentication="name">user@example.com</span>
-                <a th:href="@{/orders}">My orders</a>
                 <a sec:authorize="hasRole('ADMIN')" th:href="@{/admin}">Admin</a>
                 <form th:action="@{/logout}" method="post">
                     <button class="link-button" type="submit">Log out</button>
@@ -34,11 +28,7 @@
 </header>
 <nav class="main-nav" aria-label="Main">
     <div class="container">
-        <a th:href="@{/}" th:classappend="${active == 'home'} ? 'active'">Home</a>
-        <a th:href="@{/shop}" th:classappend="${active == 'shop'} ? 'active'">Shop</a>
         <a th:href="@{/facilities}" th:classappend="${active == 'facilities'} ? 'active'">Facilities</a>
-        <a th:href="@{/news}" th:classappend="${active == 'news'} ? 'active'">News</a>
-        <a th:href="@{/about}" th:classappend="${active == 'about'} ? 'active'">About</a>
     </div>
 </nav>
 <main>

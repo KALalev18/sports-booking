@@ -11,9 +11,6 @@ import com.kalalev.sports.dto.RegistrationForm;
 import com.kalalev.sports.exception.EmailAlreadyUsedException;
 import com.kalalev.sports.model.User;
 import com.kalalev.sports.model.UserRole;
-import com.kalalev.sports.repository.ConstructionRepository;
-import com.kalalev.sports.repository.ContactRepository;
-import com.kalalev.sports.repository.OrderRepository;
 import com.kalalev.sports.repository.UserRepository;
 import com.kalalev.sports.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,15 +27,6 @@ class UserServiceImplTest {
     private UserRepository userRepository;
 
     @Mock
-    private OrderRepository orderRepository;
-
-    @Mock
-    private ContactRepository contactRepository;
-
-    @Mock
-    private ConstructionRepository constructionRepository;
-
-    @Mock
     private RoleService roleService;
 
     private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
@@ -46,13 +34,7 @@ class UserServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        userService = new UserServiceImpl(
-                userRepository,
-                orderRepository,
-                contactRepository,
-                constructionRepository,
-                roleService,
-                passwordEncoder);
+        userService = new UserServiceImpl(userRepository, roleService, passwordEncoder);
     }
 
     private static RegistrationForm form(String email) {
