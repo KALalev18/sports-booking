@@ -9,21 +9,18 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.view;
 
-import com.kalalev.booking.TestcontainersConfig;
+import com.kalalev.booking.IntegrationTest;
 import com.kalalev.booking.domain.AppUser;
 import com.kalalev.booking.domain.Role;
 import com.kalalev.booking.repository.AppUserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-@SpringBootTest
+@IntegrationTest
 @AutoConfigureMockMvc
-@Import(TestcontainersConfig.class)
 @Transactional
 class RegistrationIT {
     @Autowired

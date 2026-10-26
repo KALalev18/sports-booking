@@ -2,8 +2,8 @@ package com.kalalev.booking.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.kalalev.booking.IntegrationTest;
 import com.kalalev.booking.TestData;
-import com.kalalev.booking.TestcontainersConfig;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -18,15 +18,12 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.RepeatedTest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 
 /**
  * Fires many booking requests for the same slot at the same moment and checks that exactly one wins. This is the
  * case a "check, then insert" approach gets wrong: several threads see the slot as free before any of them saves.
  */
-@SpringBootTest
-@Import(TestcontainersConfig.class)
+@IntegrationTest
 class ConcurrentBookingIT {
     private static final int CUSTOMERS = 50;
 

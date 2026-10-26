@@ -1,6 +1,7 @@
 package com.kalalev.booking.repository;
 
 import com.kalalev.booking.domain.Court;
+import com.kalalev.booking.domain.Sport;
 import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
@@ -12,6 +13,18 @@ import org.springframework.data.repository.query.Param;
 public interface CourtRepository extends JpaRepository<Court, Long> {
     @Query("select c from Court c join fetch c.facility f order by f.city, f.name, c.name")
     List<Court> findAllWithFacility();
+
+    /** Courts in a city (any city if null) for a sport (any sport if null). */
+    @Query("""
+            select c from Court c join fetch c.facility f
+            where (:city is null or lower(f.city) = lower(cast(:city as string)))
+              and (:sport is null or c.sport = :sport)
+            order by f.city, f.name, c.name
+            """)
+    List<Court> search(@Param("city") String city, @Param("sport") Sport sport);
+
+    @Query("select c from Court c join fetch c.facility where c.facility.id = :facilityId order by c.name")
+    List<Court> findByFacility(@Param("facilityId") long facilityId);
 
     /**
      * Loads the court with a row lock (SELECT ... FOR UPDATE) held until the transaction ends. Every transaction

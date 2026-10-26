@@ -3,21 +3,18 @@ package com.kalalev.booking.repository;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.kalalev.booking.IntegrationTest;
 import com.kalalev.booking.TestData;
-import com.kalalev.booking.TestcontainersConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 
 /**
  * Tests the booking_no_overlap constraint directly with SQL, bypassing the Java code, to show the database itself
  * refuses double bookings.
  */
-@SpringBootTest
-@Import(TestcontainersConfig.class)
+@IntegrationTest
 class ExclusionConstraintIT {
     @Autowired
     private TestData data;
