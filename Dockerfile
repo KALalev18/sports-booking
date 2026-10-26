@@ -11,5 +11,7 @@ RUN ./mvnw -B -q -DskipTests package
 FROM eclipse-temurin:25-jre
 WORKDIR /app
 COPY --from=build /app/target/sports-booking-1.0.0.jar app.jar
+# Docker Compose support is for running from source, not inside the container
+ENV SPRING_DOCKER_COMPOSE_ENABLED=false
 EXPOSE 8080
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75", "-jar", "app.jar"]

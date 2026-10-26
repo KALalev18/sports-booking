@@ -9,7 +9,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.testcontainers.postgresql.PostgreSQLContainer;
 
 /**
- * A real PostgreSQL 17 in Docker for integration tests, plus a movable clock. The beans are shared by every test
+ * A real PostgreSQL 17.11 in Docker for integration tests, plus a movable clock. The beans are shared by every test
  * that imports this configuration, because Spring caches the application context between test classes.
  */
 @TestConfiguration(proxyBeanMethods = false)
@@ -21,7 +21,7 @@ public class TestcontainersConfig {
     @Bean
     @ServiceConnection
     PostgreSQLContainer postgres() {
-        return new PostgreSQLContainer("postgres:17-alpine");
+        return new PostgreSQLContainer("postgres:17.11-alpine");
     }
 
     @Bean

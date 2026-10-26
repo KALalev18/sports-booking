@@ -122,6 +122,13 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <!-- ./mvnw spring-boot:run uses demo data and the local Mailpit -->
+                    <profiles>
+                        <profile>demo</profile>
+                        <profile>local</profile>
+                    </profiles>
+                </configuration>
             </plugin>
             <!-- Unit tests (*Test) run in the test phase; integration tests (*IT) need Docker and run in verify -->
             <plugin>

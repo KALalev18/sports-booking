@@ -1,8 +1,10 @@
-# Local services. `./mvnw spring-boot:run` starts these automatically (spring-boot-docker-compose).
-# `docker compose --profile app up --build` also builds and runs the app itself with demo data.
+# Local services.
+#   ./mvnw spring-boot:run                  starts postgres and mailpit automatically, then runs the app
+#   docker compose --profile app up --build runs everything in Docker, including the app
+# Mailpit catches outgoing email: http://localhost:8025
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17.11-alpine
     environment:
       POSTGRES_DB: booking
       POSTGRES_USER: booking
@@ -14,3 +16,25 @@ services:
       interval: 3s
       timeout: 3s
       retries: 20
+
+  mailpit:
+    image: axllent/mailpit:v1.32.0
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
+  app:
+    profiles: [app]
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      DB_URL: jdbc:postgresql://postgres:5432/booking
+      DB_USERNAME: booking
+      DB_PASSWORD: booking
+      SPRING_MAIL_HOST: mailpit
+      SPRING_MAIL_PORT: "1025"
+    ports:
+      - "8080:8080"
