@@ -1,0 +1,16 @@
+# Local services. `./mvnw spring-boot:run` starts these automatically (spring-boot-docker-compose).
+# `docker compose --profile app up --build` also builds and runs the app itself with demo data.
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: booking
+      POSTGRES_USER: booking
+      POSTGRES_PASSWORD: booking
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U booking -d booking"]
+      interval: 3s
+      timeout: 3s
+      retries: 20

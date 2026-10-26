@@ -17,3 +17,12 @@ Thumbs.db
 
 # JVM crash logs
 hs_err_pid*
+
+# Editor tooling
+.bloop/
+.metals/
+.bsp/
+.settings/
+.classpath
+.project
+.factorypath
