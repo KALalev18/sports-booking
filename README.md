@@ -39,7 +39,7 @@ It started as my diploma project for the state matriculation exam in applied pro
 
 | Layer | Technologies |
 | --- | --- |
-| Backend | Java 17, Spring Boot 3.5, Spring MVC, Spring Data JPA (Hibernate), Spring Security, Bean Validation |
+| Backend | Java 25, Spring Boot 3.5, Spring MVC, Spring Data JPA (Hibernate), Spring Security, Bean Validation |
 | Frontend | Thymeleaf templates, HTML, CSS, vanilla JavaScript (cart) |
 | Database | Microsoft SQL Server (`sqlserver` profile), H2 in-memory (default profile, tests and demo) |
 | Testing | JUnit 5, Mockito, AssertJ, Spring Boot Test, MockMvc, Spring Security Test |
@@ -74,7 +74,7 @@ erDiagram
 
 ## Run it locally
 
-You need **Java 17** or newer. Maven is not needed, because the wrapper downloads it.
+You need **Java 25** or newer. Maven is not needed, because the wrapper downloads it.
 
 ```bash
 git clone https://github.com/KALalev18/SportsProject.git
