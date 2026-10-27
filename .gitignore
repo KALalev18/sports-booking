@@ -26,3 +26,6 @@ hs_err_pid*
 .classpath
 .project
 .factorypath
+
+# Node (k6 is run from Docker, but just in case)
+node_modules/

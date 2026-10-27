@@ -1,106 +1,162 @@
-# Sports Facilities Platform
+# Sports Booking
 
-A Spring Boot web app where people find sports facilities in Bulgaria, order sports equipment, and request new or rebuilt facilities, with an admin panel to manage it all.
+Book sports courts by the hour, with no double bookings, even when many people book the same slot at the same moment.
 
-[![CI](https://github.com/KALalev18/SportsProject/actions/workflows/ci.yml/badge.svg)](https://github.com/KALalev18/SportsProject/actions/workflows/ci.yml)
+[![CI](https://github.com/KALalev18/sports-booking/actions/workflows/ci.yml/badge.svg)](https://github.com/KALalev18/sports-booking/actions/workflows/ci.yml)
+![Java 25](https://img.shields.io/badge/Java-25-blue) ![Spring Boot 4.1](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen) ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-336791)
 
-**Live demo:** _add the Render URL here_ · Demo accounts: `user@sports.demo` / `user12345` and `admin@sports.demo` / `admin12345` (the demo runs on an in-memory database that resets when the server restarts)
+**Live demo:** _add the Render URL here_ · Demo accounts (password `demo1234`): `customer@example.com`, `manager@example.com`, `admin@example.com` · [API docs](https://_render-url_/swagger-ui.html)
 
-![Facilities page](docs/screenshots/facilities.png)
+![Searching for a padel court, holding a slot and confirming it](docs/images/booking-flow.gif)
+
+```mermaid
+flowchart LR
+    Browser["Browser<br/>(Thymeleaf pages, session login)"] --> Web[web controllers]
+    Client["API client<br/>(Bearer JWT)"] --> Api["api controllers<br/>/api/v1, OpenAPI"]
+    Web --> Services
+    Api --> Services
+    subgraph Services[service layer]
+        BookingService
+        AvailabilityService
+        RecurringBookingService
+        OccupancyService
+    end
+    Services --> Repos[Spring Data JPA repositories]
+    Repos --> PG[("PostgreSQL 17<br/>Flyway migrations<br/>exclusion constraint")]
+    Job[HoldExpiryJob<br/>every minute] --> Repos
+    BookingService -. "event after commit" .-> Mail[NotificationService] --> Mailpit[(SMTP / Mailpit)]
+```
 
 ## The problem
 
-Many towns in Bulgaria have few good sports facilities, and information about the ones that exist (where they are, when they are open, what they cost) is spread across many places. This project puts three things in one site:
-
-- a list of facilities with opening days, hours, hourly price and a map
-- a small shop for sports equipment
-- a form where a town or resident can ask for a new facility or the rebuild of an existing one
-
-It started as my diploma project for the state matriculation exam in applied programming (PGKPI Burgas, 2023).
+Booking a pitch or court usually means phoning the facility, and two people asking for the same evening slot at once
+can both be told yes. This app lets people see the free hours at every court in a city and book one online. The hard
+part is guaranteeing that **one slot is only ever sold once**: two requests for the same hour can arrive in the same
+millisecond, and the second one has to be refused cleanly, not crash and not succeed.
 
 ## Features
 
-- **Accounts and roles:** registration and login with Spring Security. Passwords are stored as BCrypt hashes. Users have the `USER` or `ADMIN` role, and everything under `/admin` needs `ADMIN`.
-- **Facilities:** cards loaded from the database with city, working days and hours, price per hour (or "Free") and an embedded Google Map.
-- **Shop and checkout:** the cart lives in the browser (localStorage). At checkout only product ids and quantities are sent. The server looks up the prices, checks quantities (1 to 99), and saves all order lines in one transaction.
-- **Order history:** each user sees their own orders under "My orders".
-- **Construction requests:** logged-in users ask for a new facility, or pick an existing one to be rebuilt.
-- **Feedback form** on the About page, saved to the database.
-- **Search** across facility names, cities and products.
-- **Admin panel:** overview counts; add, edit and delete products and facilities; change user roles or delete users; review and delete orders, feedback and construction requests.
+- **Search** free one-hour slots by city, sport and day; each free hour is a button.
+- **Hold, then confirm.** Picking a slot holds it for 10 minutes while the customer confirms; unconfirmed holds are
+  released by a scheduled job. A customer can hold at most 3 slots at a time, so nobody can lock up every court.
+- **Cancellation rule.** Customers cancel for free until 24 hours before the start; managers can cancel any time
+  (for example for bad weather), and the customer is emailed.
+- **Weekly bookings.** "Every Tuesday 18:00–20:00 for 10 weeks" books every free week and reports the weeks that clash.
+- **Three roles.** Customers book; managers see a day grid of their facilities and close courts for maintenance;
+  admins manage roles. Managers only see facilities they run.
+- **Email** confirmations, sent after the transaction commits (Mailpit catches them locally).
+- **REST API** with JWT authentication, OpenAPI/Swagger UI and RFC 9457 problem-detail errors.
 
-| Shop with cart | Admin: orders |
+| Checkout with the hold timer | Manager's day grid |
 | --- | --- |
-| ![Shop](docs/screenshots/shop-cart.png) | ![Admin orders](docs/screenshots/admin-orders.png) |
-| **Construction request** | **Admin: edit facility** |
-| ![Construction request](docs/screenshots/request.png) | ![Admin facility form](docs/screenshots/admin-field-form.png) |
+| ![Checkout](docs/images/checkout.png) | ![Manager day grid](docs/images/manage-day.png) |
 
 ## Tech stack
 
-| Layer | Technologies |
+| | |
 | --- | --- |
-| Backend | Java 25, Spring Boot 3.5, Spring MVC, Spring Data JPA (Hibernate), Spring Security, Bean Validation |
-| Frontend | Thymeleaf templates, HTML, CSS, vanilla JavaScript (cart) |
-| Database | Microsoft SQL Server (`sqlserver` profile), H2 in-memory (default profile, tests and demo) |
-| Testing | JUnit 5, Mockito, AssertJ, Spring Boot Test, MockMvc, Spring Security Test |
-| Tooling | Maven Wrapper, Spotless (palantir-java-format), GitHub Actions, Docker, Docker Compose |
+| Language and framework | Java 25, Spring Boot 4.1 (Spring MVC, Spring Data JPA / Hibernate 7, Spring Security 7, Bean Validation), virtual threads |
+| Database | PostgreSQL 17, Flyway migrations, GiST exclusion constraint (`btree_gist`) |
+| API | REST, JWT (OAuth2 resource server, HS256), springdoc OpenAPI / Swagger UI, `ProblemDetail` errors |
+| Web UI | Thymeleaf, server-rendered HTML and CSS, a little vanilla JavaScript |
+| Testing | JUnit 6, Mockito, AssertJ, MockMvc, Testcontainers (PostgreSQL), JaCoCo coverage |
+| Quality and delivery | Spotless (palantir-java-format), Checkstyle, GitHub Actions CI, Docker, Docker Compose, Micrometer / Actuator, k6 load tests |
 
-## How it is built
+## Design decisions
 
-The app follows the MVC pattern with three layers below the controllers, as described in the thesis:
+**1. The database enforces "no double bookings".** A Java check such as "is this slot free? then insert" fails under
+concurrency: two requests can both see the slot as free before either one saves. Instead,
+[`V2__bookings.sql`](src/main/resources/db/migration/V2__bookings.sql) adds an exclusion constraint:
 
-```
-Browser ── Thymeleaf views ── Controllers ── Services ── Repositories ── Database
-                                (web)      (business rules)  (Spring Data JPA)
-```
-
-- **Controllers** (`controller`, `controller/admin`) handle requests and pick a view. Forms bind straight to entities, but `@InitBinder` whitelists the fields a form may set, so a user cannot post an id or a user field to overwrite someone else's data.
-- **Services** (`service`, `service/impl`) hold the rules: unique email and password hashing at registration, server-side order pricing, and cleanup of rows that reference a deleted user or facility.
-- **Repositories** (`repository`) are Spring Data JPA interfaces. Queries such as `findByUserOrderByOrderDateDesc` are derived from the method names.
-
-The data model follows the database diagram from the thesis:
-
-```mermaid
-erDiagram
-    UserRoles ||--o{ Users : has
-    Users ||--o{ Orders : places
-    Products ||--o{ Orders : "ordered in"
-    Users ||--o{ Contacts : sends
-    Users ||--o{ Constructions : requests
-    Fields |o--o{ Constructions : "rebuild of"
+```sql
+CONSTRAINT booking_no_overlap EXCLUDE USING gist (
+    court_id WITH =,
+    tstzrange(start_time, end_time, '[)') WITH &&
+) WHERE (status IN ('HELD', 'CONFIRMED'))
 ```
 
-`Orders` stores one row per product in a checkout, with the quantity and the line total, as in the original schema. Prices use `DECIMAL(10,2)` and `BigDecimal` rather than floating point.
+PostgreSQL refuses any second active booking whose time range overlaps another on the same court. Ranges are
+half-open (`[)`), so 10:00–11:00 and 11:00–12:00 do not clash, and cancelled or expired rows free their slot. The
+service catches the violation (SQLSTATE `23P01`) and returns `409 SLOT_UNAVAILABLE`.
+
+**2. A row lock on the court prevents deadlocks.** The concurrency test found something the constraint alone does
+not handle: two inserts for the same slot can each wait for the other's uncommitted row while checking the
+constraint, and PostgreSQL aborts one as a deadlock after a one-second timeout. Every booking transaction now locks the
+court row first (`SELECT … FOR UPDATE`), so requests for the same court queue up and the losers get a clean 409, while
+different courts still book in parallel. The constraint remains the guarantee; the lock makes failures clean and fast.
+
+**3. Holds expire in two ways.** A scheduled job marks run-out holds as `EXPIRED` every minute, but correctness does not
+depend on it: search treats a run-out hold as free, and a new booking for that time releases it in the same
+transaction. Confirm, cancel and expire all bump a `@Version` column, so a confirm based on a stale read loses
+to the expiry instead of overwriting it.
+
+**4. Times are stored in UTC and shown in the facility's time zone.** Opening hours are local (`08:00–22:00` in
+`Europe/Sofia`); bookings are `timestamptz`. A unit test checks that 18:00 in Sofia is 15:00 UTC in summer and
+16:00 UTC in winter. Every rule reads time from an injected `Clock`, so tests can move time forward instead of
+sleeping.
+
+**5. Two security chains.** `/api/**` is stateless with Bearer JWTs (no cookies, so no CSRF); the website uses a
+session and CSRF tokens. Facility-level rules ("a manager may only touch their own facilities") are `@PreAuthorize`
+checks on service methods, so they apply to both the API and the site.
+
+**6. Services return read-only views.** Controllers get records like `BookingView` built inside the transaction, never
+JPA entities, so nothing outside the service layer can trigger lazy loading or change data by accident.
+`open-in-view` is off.
+
+**7. Emails never break a booking.** They are sent from `@TransactionalEventListener` handlers after the commit, on
+another thread: a rolled-back booking sends nothing, and a mail server outage only logs a warning.
+
+**Trade-offs.** Bookings are whole hours, which keeps search simple. Thymeleaf instead of a separate frontend keeps
+the project focused on the backend. HS256 with one shared key works because this app both issues and checks its
+tokens; with a separate auth service you would use RS256 and publish the public key.
+
+## Measured results
+
+On a laptop (Ryzen 7 4800H, everything in Docker), with **441,277 bookings across 1,011 courts**. Full commands
+and output are in [`perf/RESULTS.md`](perf/RESULTS.md).
+
+| What | Result |
+| --- | --- |
+| 100 simultaneous HTTP requests for one free slot (k6) | **1 booked, 99 refused with 409** |
+| 50 threads, same slot, in the test suite (repeated 5 times per run) | exactly 1 succeeds every time |
+| Search: 20 users, random city (100 courts) and day, 60 s | **593 req/s, p95 46 ms**, 0 errors |
+| Holds: 50 customers, random slots, 60 s | **568 attempts/s, p95 78 ms** (368/s held, 199/s correctly refused) |
+| Search query for 100 courts, `EXPLAIN ANALYZE` | 10.8 ms, uses the constraint's GiST index |
+| Tests | 70 (23 unit, 47 integration on PostgreSQL), line coverage 78.9%, service layer 89.5% |
 
 ## Run it locally
 
-You need **Java 25** or newer. Maven is not needed, because the wrapper downloads it.
+You need **Java 25** and **Docker**. Maven is not needed; the wrapper downloads it.
 
 ```bash
-git clone https://github.com/KALalev18/SportsProject.git
-cd SportsProject
-./mvnw spring-boot:run        # on Windows: mvnw.cmd spring-boot:run
+git clone https://github.com/KALalev18/sports-booking.git
+cd sports-booking
+./mvnw spring-boot:run          # Windows: mvnw.cmd spring-boot:run
 ```
 
-Open http://localhost:8080. The default profile uses an in-memory H2 database and fills it with the demo accounts, six products and three facilities, so no setup is needed.
+Spring Boot starts PostgreSQL and Mailpit from [`compose.yaml`](compose.yaml), runs the Flyway migrations and fills
+the database with demo data. Then open:
 
-### With Microsoft SQL Server
+- http://localhost:8080: the site (log in as `customer@example.com` / `demo1234`, or manager / admin)
+- http://localhost:8080/swagger-ui.html: the API
+- http://localhost:8025: Mailpit, where the confirmation emails land
 
-Docker Compose starts SQL Server 2022, creates the `SportsDb` database and runs the app with the `sqlserver` profile:
+To run everything in Docker without Java installed: `docker compose --profile app up --build`.
+
+### API example
 
 ```bash
-cp .env.example .env          # then set DB_PASSWORD to a strong password
-docker compose up --build
+TOKEN=$(curl -s -X POST localhost:8080/api/v1/auth/token -H 'Content-Type: application/json' \
+  -d '{"email":"customer@example.com","password":"demo1234"}' | jq -r .accessToken)
+
+curl -s "localhost:8080/api/v1/availability?date=2026-11-03&city=Varna&sport=PADEL"
+
+curl -s -X POST localhost:8080/api/v1/bookings -H "Authorization: Bearer $TOKEN" \
+  -H 'Content-Type: application/json' -d '{"courtId":9,"date":"2026-11-03","start":"18:00","hours":2}'
+# 201 {"id":…,"status":"HELD","price":56.00,"holdExpiresAt":"…"}   or   409 {"code":"SLOT_UNAVAILABLE",…}
 ```
 
-To use your own SQL Server instead, set `DB_URL`, `DB_USERNAME` and `DB_PASSWORD` (see `.env.example`) and run `./mvnw spring-boot:run -Dspring-boot.run.profiles=sqlserver`. Hibernate creates the tables on first start.
-
-| Variable | Used for | Default |
-| --- | --- | --- |
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | SQL Server connection (`sqlserver` profile only) | none |
-| `DEMO_ADMIN_EMAIL`, `DEMO_ADMIN_PASSWORD` | Admin account created on an empty database | `admin@sports.demo` / `admin12345` |
-| `DEMO_USER_EMAIL`, `DEMO_USER_PASSWORD` | User account created on an empty database | `user@sports.demo` / `user12345` |
-| `PORT` | HTTP port | `8080` |
+Configuration is through environment variables; see [`.env.example`](.env.example).
 
 ## Tests
 
@@ -108,62 +164,48 @@ To use your own SQL Server instead, set `DB_URL`, `DB_USERNAME` and `DB_PASSWORD
 ./mvnw verify
 ```
 
-This checks formatting and runs 44 tests (unit, `@DataJpaTest` repository tests and MockMvc tests on H2). GitHub Actions runs the same command on every push. The tests cover:
+Runs Checkstyle and Spotless, the unit tests, and the integration tests against a real PostgreSQL 17 in
+Testcontainers (Docker must be running). The JaCoCo report is written to `target/site/jacoco/index.html`.
+GitHub Actions runs the same command on every push.
 
-- order pricing from the database, quantity limits, and that nothing is saved when one cart line is invalid
-- registration: BCrypt hashing, duplicate email, mismatched passwords
-- database constraints: required fields and unique email
-- access rules: public pages, login redirects, `403` for non-admins on `/admin`, CSRF tokens required
-- a checkout that sends a fake price, and a form post that tries to overwrite another row; both are ignored
-
-To format the code: `./mvnw spotless:apply`.
+Highlights:
+[`ConcurrentBookingIT`](src/test/java/com/kalalev/booking/service/ConcurrentBookingIT.java) (50 threads, one slot),
+[`ExclusionConstraintIT`](src/test/java/com/kalalev/booking/repository/ExclusionConstraintIT.java) (the constraint on its
+own, in plain SQL), [`HoldExpiryJobIT`](src/test/java/com/kalalev/booking/service/HoldExpiryJobIT.java) (optimistic
+locking against the expiry job), [`BookingApiIT`](src/test/java/com/kalalev/booking/api/BookingApiIT.java) (JWT, 401/403/409/422).
 
 ## Project structure
 
 ```
-src/main/java/com/kalalev/sports
-├── config/          AppConfig (clock), DataSeeder (demo data)
-├── content/         ServiceCatalog: the six construction service pages
-├── controller/      public pages, auth, shop, facilities, feedback
-│   └── admin/       admin panel controllers
-├── dto/             RegistrationForm, CartItem
-├── exception/       NotFoundException (404), InvalidOrderException, ...
-├── model/           JPA entities: User, UserRole, Product, Order, Field, Contact, Construction
-├── repository/      Spring Data JPA repositories
-├── security/        SecurityConfig, login by email, safe redirect after login
-└── service/         service interfaces, with implementations in impl/
-src/main/resources
-├── templates/       Thymeleaf views (layout, public pages, admin/)
-├── static/          CSS, cart JavaScript, product images
-└── application*.properties
-src/test/java/...    unit, repository and web tests
+src/main/java/com/kalalev/booking
+├── api/          REST controllers, ProblemDetail error handler, OpenAPI config
+├── web/          Thymeleaf page controllers
+├── service/      booking rules, availability, recurring bookings, occupancy, email, expiry job
+├── domain/       JPA entities: Booking, Court, Facility, AppUser, RecurringSeries
+├── repository/   Spring Data JPA repositories, native queries for range overlap
+├── security/     two filter chains, JWT config, facility access checks
+└── config/       clock, booking settings, demo data
+src/main/resources/db/migration   Flyway: V1 users/facilities/courts, V2 bookings + constraint, V3 recurring
+src/test/java/...                 unit tests (*Test) and Testcontainers integration tests (*IT)
+perf/                             load-test dataset, k6 scripts, results
 ```
+
+## What I'd do next
+
+- **Cancel a whole weekly series** at once, and one summary email for it.
+- **Rate limiting** on login and holds (for example Bucket4j), and account lockout after repeated failed logins.
+- **Payments** for confirmed bookings and a refund rule for late cancellations.
+- **Opening hours per weekday** and holiday closures, instead of the same hours every day.
+- **Read replicas or caching** for search if traffic grew; today one query per search is fast enough.
+- **Observability:** export the Micrometer metrics (holds created, expired, refused) to Prometheus and Grafana.
 
 ## Project history
 
-I built the first version in 2023 for my diploma at the Professional High School of Computer Programming and Innovations (PGKPI) in Burgas. The thesis (in Bulgarian) describes the requirements, the UML and database diagrams, and the MVC design.
-
-In 2026 I came back to it to finish it properly. The original code had problems that kept most of it from running:
-- Spring never loaded the controllers and entities, because the main class was in a different package.
-- The entity mappings would have stopped Hibernate from starting.
-- Login and the shop were front-end only.
-- The tests could not pass.
-
-I kept the design and the database model from the thesis, and changed the following:
-- fixed the mappings and package structure
-- added Spring Security
-- moved the pages into Thymeleaf templates and translated them to English
-- moved the shop and orders to the database
-- added the admin panel, real tests, CI and Docker
-
-## What I would improve next
-
-- **Hourly booking of facilities.** This was planned in the thesis but not built. It needs a bookings table and checks for overlapping time slots.
-- **Uploads and editable news.** Image upload for products and facilities, instead of image URLs and file names. News is static HTML today and could move to the database with an admin editor.
-- **Database migrations.** Flyway instead of `ddl-auto=update`, so schema changes are versioned.
-- **Account management.** Users editing or deleting their own account, and password reset by email.
-- **Hosted images.** Facility and service photos are linked from their original websites. They should be replaced with images the project has the rights to.
-- **Order statuses** (placed, shipped, delivered) and a real payment step.
+This started in 2023 as my diploma project for the state matriculation exam in applied programming at the Vocational
+School of Computer Programming and Innovations (VSCPI) in Burgas: a sports facilities website with a shop and an
+admin panel, written in Spring Boot 3.0 and SQL Server. Much of it never ran. In 2026 I rebuilt it around the hardest
+problem in that domain, booking courts by the hour safely under concurrency. The early commits in the history are the
+original school project.
 
 ## License
 
