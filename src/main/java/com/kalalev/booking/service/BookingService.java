@@ -200,7 +200,7 @@ public class BookingService {
             return bookingRepository.saveAndFlush(booking);
         } catch (DataIntegrityViolationException e) {
             if (isOverlap(e)) {
-                throw new BookingException(SLOT_UNAVAILABLE, "Someone else has just booked this time");
+                throw new BookingException(SLOT_UNAVAILABLE, "That time is no longer free. Please pick another slot.");
             }
             throw e;
         }

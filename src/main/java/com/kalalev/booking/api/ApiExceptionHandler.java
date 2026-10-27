@@ -13,7 +13,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 /**
  * Turns errors into RFC 9457 problem details, for example:
  *
- * <pre>{"title":"Slot unavailable","status":409,"detail":"Someone else has just booked this time",
+ * <pre>{"title":"Slot unavailable","status":409,"detail":"That time is no longer free. Please pick another slot.",
  * "code":"SLOT_UNAVAILABLE"}</pre>
  *
  * The {@code code} lets clients react without parsing the message. Validation errors come from the parent class.
