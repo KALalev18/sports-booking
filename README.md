@@ -5,7 +5,7 @@ Book sports courts by the hour, with no double bookings, even when many people b
 [![CI](https://github.com/KALalev18/sports-booking/actions/workflows/ci.yml/badge.svg)](https://github.com/KALalev18/sports-booking/actions/workflows/ci.yml)
 ![Java 25](https://img.shields.io/badge/Java-25-blue) ![Spring Boot 4.1](https://img.shields.io/badge/Spring%20Boot-4.1-brightgreen) ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-336791)
 
-**Live demo:** _add the Render URL here_ · Demo accounts (password `demo1234`): `customer@example.com`, `manager@example.com`, `admin@example.com` · [API docs](https://_render-url_/swagger-ui.html)
+**Project page:** [kalalev18.github.io/sports-booking](https://kalalev18.github.io/sports-booking/) · **Live demo:** _add the Render URL here_ · Demo accounts (password `demo1234`): `customer@example.com`, `manager@example.com`, `admin@example.com` · [API docs](https://_render-url_/swagger-ui.html)
 
 ![Searching for a padel court, holding a slot and confirming it](docs/images/booking-flow.gif)
 

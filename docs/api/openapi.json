@@ -1,0 +1,946 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sports Booking API",
+    "description": "Book sports courts by the hour. Times are local to the facility.",
+    "version": "v1"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Local run (./mvnw spring-boot:run)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Facility management",
+      "description": "MANAGER of the facility, or ADMIN"
+    },
+    {
+      "name": "Facilities and availability",
+      "description": "Public, no token needed"
+    },
+    {
+      "name": "Bookings",
+      "description": "The logged-in customer's bookings"
+    }
+  ],
+  "paths": {
+    "/api/v1/manage/courts/{courtId}/blocks": {
+      "post": {
+        "tags": [
+          "Facility management"
+        ],
+        "summary": "Close a court for maintenance; fails with 409 if customers have booked that time",
+        "operationId": "block",
+        "parameters": [
+          {
+            "name": "courtId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/manage/bookings/{bookingId}/cancel": {
+      "post": {
+        "tags": [
+          "Facility management"
+        ],
+        "summary": "Cancel any booking at my facility, at any time",
+        "operationId": "cancel",
+        "parameters": [
+          {
+            "name": "bookingId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "My bookings, newest first",
+        "operationId": "mine",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BookingView"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Hold a slot for 10 minutes",
+        "description": "Returns 409 if the slot is taken.",
+        "operationId": "hold",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HoldRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings/{id}/confirm": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Confirm a held slot before the hold runs out",
+        "operationId": "confirm",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings/{id}/cancel": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Release a hold, or cancel a booking up to 24 hours before it starts",
+        "operationId": "cancel_1",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/bookings/recurring": {
+      "post": {
+        "tags": [
+          "Bookings"
+        ],
+        "summary": "Book the same court every week; clashing weeks are reported and skipped",
+        "operationId": "recurring",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecurringRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Result"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/auth/token": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Exchange email and password for a bearer token",
+        "operationId": "token",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/manage/facilities": {
+      "get": {
+        "tags": [
+          "Facility management"
+        ],
+        "summary": "Facilities I manage (all of them for admins)",
+        "operationId": "facilities",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacilitySummary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/manage/facilities/{facilityId}/occupancy": {
+      "get": {
+        "tags": [
+          "Facility management"
+        ],
+        "summary": "Every court's bookings for a day and the share of hours booked",
+        "operationId": "occupancy",
+        "parameters": [
+          {
+            "name": "facilityId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityDay"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/facilities": {
+      "get": {
+        "tags": [
+          "Facilities and availability"
+        ],
+        "summary": "List facilities with their courts and prices",
+        "operationId": "facilities_1",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacilityView"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/bookings/{id}": {
+      "get": {
+        "tags": [
+          "Bookings"
+        ],
+        "operationId": "get",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/BookingView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer-jwt": []
+          }
+        ]
+      }
+    },
+    "/api/v1/availability": {
+      "get": {
+        "tags": [
+          "Facilities and availability"
+        ],
+        "summary": "Free one-hour slots per court for a date, optionally filtered by city and sport",
+        "operationId": "availability",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "city",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sport",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "FOOTBALL",
+                "TENNIS",
+                "BASKETBALL",
+                "VOLLEYBALL",
+                "PADEL"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourtAvailability"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BlockRequest": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 24,
+            "minimum": 1
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 200,
+            "minLength": 0
+          }
+        },
+        "required": [
+          "date",
+          "start"
+        ]
+      },
+      "BookingView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "HELD",
+              "CONFIRMED",
+              "CANCELLED",
+              "EXPIRED"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "CUSTOMER",
+              "MAINTENANCE"
+            ]
+          },
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtName": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string",
+            "enum": [
+              "FOOTBALL",
+              "TENNIS",
+              "BASKETBALL",
+              "VOLLEYBALL",
+              "PADEL"
+            ]
+          },
+          "facilityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "facilityName": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "zone": {
+            "type": "string"
+          },
+          "start": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "end": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "price": {
+            "type": "number"
+          },
+          "holdExpiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customerName": {
+            "type": "string"
+          },
+          "customerEmail": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "seriesId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "HoldRequest": {
+        "type": "object",
+        "properties": {
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 12,
+            "minimum": 1
+          }
+        },
+        "required": [
+          "courtId",
+          "date",
+          "start"
+        ]
+      },
+      "RecurringRequest": {
+        "type": "object",
+        "properties": {
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "firstDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "start": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "hours": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 12,
+            "minimum": 1
+          },
+          "weeks": {
+            "type": "integer",
+            "format": "int32",
+            "maximum": 12,
+            "minimum": 2
+          }
+        },
+        "required": [
+          "courtId",
+          "firstDate",
+          "start"
+        ]
+      },
+      "Occurrence": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "BOOKED",
+              "CONFLICT",
+              "NOT_BOOKABLE"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "bookingId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "Result": {
+        "type": "object",
+        "properties": {
+          "seriesId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "occurrences": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Occurrence"
+            }
+          }
+        }
+      },
+      "TokenRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "Token": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "tokenType": {
+            "type": "string"
+          },
+          "expiresIn": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "FacilitySummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          }
+        }
+      },
+      "CourtDay": {
+        "type": "object",
+        "properties": {
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtName": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string",
+            "enum": [
+              "FOOTBALL",
+              "TENNIS",
+              "BASKETBALL",
+              "VOLLEYBALL",
+              "PADEL"
+            ]
+          },
+          "bookings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BookingView"
+            }
+          }
+        }
+      },
+      "FacilityDay": {
+        "type": "object",
+        "properties": {
+          "facilityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "facilityName": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "opensAt": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "closesAt": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "courts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtDay"
+            }
+          },
+          "occupancyPercent": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "CourtView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string",
+            "enum": [
+              "FOOTBALL",
+              "TENNIS",
+              "BASKETBALL",
+              "VOLLEYBALL",
+              "PADEL"
+            ]
+          },
+          "pricePerHour": {
+            "type": "number"
+          }
+        }
+      },
+      "FacilityView": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "opensAt": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "closesAt": {
+            "type": "string",
+            "format": "time-local"
+          },
+          "courts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CourtView"
+            }
+          }
+        }
+      },
+      "CourtAvailability": {
+        "type": "object",
+        "properties": {
+          "courtId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "courtName": {
+            "type": "string"
+          },
+          "sport": {
+            "type": "string",
+            "enum": [
+              "FOOTBALL",
+              "TENNIS",
+              "BASKETBALL",
+              "VOLLEYBALL",
+              "PADEL"
+            ]
+          },
+          "pricePerHour": {
+            "type": "number"
+          },
+          "facilityId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "facilityName": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "freeStarts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "time-local"
+            }
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearer-jwt": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}
