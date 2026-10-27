@@ -5,7 +5,8 @@ COPY .mvn .mvn
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
 COPY src src
-RUN ./mvnw -B -q -DskipTests package
+# Tests and lint run in CI; the image build only compiles and packages
+RUN ./mvnw -B -q -DskipTests -Dcheckstyle.skip -Djacoco.skip package
 
 # Run stage: only the JRE and the jar
 FROM eclipse-temurin:25-jre
