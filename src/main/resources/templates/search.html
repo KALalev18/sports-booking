@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'search', ~{})}">
+<head><title>Book a court · Sports Booking</title></head>
+<body>
+<section>
+    <h1 class="page-title">Book a court</h1>
+    <p class="page-lead">Pick a city, a sport and a day, then choose a free hour. The slot is held for you for
+        10 minutes while you confirm.</p>
+
+    <form class="card card-body search-form" th:action="@{/}" method="get">
+        <div>
+            <label for="city">City</label>
+            <select id="city" name="city">
+                <option value="">Any city</option>
+                <option th:each="c : ${cities}" th:value="${c}" th:text="${c}" th:selected="${c == city}">Sofia</option>
+            </select>
+        </div>
+        <div>
+            <label for="sport">Sport</label>
+            <select id="sport" name="sport">
+                <option value="">Any sport</option>
+                <option th:each="s : ${sports}" th:value="${s}" th:text="${s.displayName()}"
+                        th:selected="${s == sport}">Tennis</option>
+            </select>
+        </div>
+        <div>
+            <label for="date">Day</label>
+            <input id="date" type="date" name="date" th:value="${date}" th:min="${today}">
+        </div>
+        <div class="search-submit">
+            <button class="button" type="submit">Show free slots</button>
+        </div>
+    </form>
+
+    <p th:if="${results.isEmpty()}" class="muted">No courts match. Try another city or sport.</p>
+
+    <div class="court-list">
+        <article class="card card-body court" th:each="r : ${results}">
+            <header class="court-header">
+                <div>
+                    <h2 th:text="|${r.facilityName} · ${r.courtName}|">Sea Garden Courts · Court 1</h2>
+                    <span class="tag" th:text="${r.sport.displayName()}">Tennis</span>
+                    <span class="muted" th:text="|${r.city}, ${r.address}|">Varna, Street 1</span>
+                </div>
+                <strong class="price" th:text="|€${#numbers.formatDecimal(r.pricePerHour, 1, 2)} / hour|">€20.00 / hour</strong>
+            </header>
+
+            <p th:if="${r.freeStarts.isEmpty()}" class="muted">Fully booked on this day.</p>
+
+            <form sec:authorize="isAuthenticated()" th:unless="${r.freeStarts.isEmpty()}" th:action="@{/bookings}"
+                  method="post" class="slots">
+                <input type="hidden" name="courtId" th:value="${r.courtId}">
+                <input type="hidden" name="date" th:value="${date}">
+                <input type="hidden" name="back"
+                       th:value="@{/(city=${city},sport=${sport},date=${date})}">
+                <label class="hours-select">Hours
+                    <select name="hours">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </label>
+                <button class="slot" type="submit" name="start" th:each="t : ${r.freeStarts}" th:value="${t}"
+                        th:text="${#temporals.format(t, 'HH:mm')}">18:00</button>
+            </form>
+
+            <div sec:authorize="isAnonymous()" th:unless="${r.freeStarts.isEmpty()}" class="slots">
+                <span class="slot disabled" th:each="t : ${r.freeStarts}" th:text="${#temporals.format(t, 'HH:mm')}">18:00</span>
+                <a th:href="@{/login(next=@{/(city=${city},sport=${sport},date=${date})})}">Log in to book</a>
+            </div>
+        </article>
+    </div>
+</section>
+</body>
+</html>

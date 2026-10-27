@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'facilities', ~{})}">
+<head><title>Facilities · Sports Booking</title></head>
+<body>
+<section>
+    <h1 class="page-title">Facilities</h1>
+    <p class="page-lead">Every facility, its opening hours and the courts you can book.</p>
+
+    <p th:if="${facilities.isEmpty()}" class="muted">No facilities have been added yet.</p>
+
+    <div class="grid">
+        <article class="card card-body facility" th:each="facility : ${facilities}">
+            <h2 th:text="${facility.name}">Facility</h2>
+            <span class="tag" th:text="${facility.city}">City</span>
+            <p class="muted" th:text="${facility.address}">Address</p>
+            <p>Open daily
+                <strong th:text="|${#temporals.format(facility.opensAt, 'HH:mm')}–${#temporals.format(facility.closesAt, 'HH:mm')}|">08:00–22:00</strong>
+            </p>
+            <table>
+                <tr th:each="court : ${facility.courts}">
+                    <td th:text="${court.name}">Court 1</td>
+                    <td th:text="${court.sport.displayName()}">Tennis</td>
+                    <td class="number" th:text="|€${#numbers.formatDecimal(court.pricePerHour, 1, 2)} / h|">€20.00 / h</td>
+                </tr>
+            </table>
+        </article>
+    </div>
+</section>
+</body>
+</html>

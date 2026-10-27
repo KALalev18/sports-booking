@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'manage', ~{})}">
+<head><title>Occupancy · Sports Booking</title></head>
+<body>
+<section>
+    <div class="page-header">
+        <div>
+            <h1 class="page-title" th:text="${day.facilityName}">Sea Garden Courts</h1>
+            <p class="page-lead">
+                <span th:text="${#temporals.format(day.date, 'EEEE d MMMM yyyy')}">Tuesday 2 June 2026</span> ·
+                <strong th:text="|${day.occupancyPercent}% booked|">40% booked</strong>
+            </p>
+        </div>
+        <div class="actions">
+            <a class="button secondary small" th:href="@{/manage/facilities/{id}(id=${day.facilityId},date=${previous})}">← Previous day</a>
+            <a class="button secondary small" th:href="@{/manage/facilities/{id}(id=${day.facilityId},date=${next})}">Next day →</a>
+        </div>
+    </div>
+
+    <div class="table-wrap card">
+        <table class="grid-table">
+            <thead>
+            <tr>
+                <th>Court</th>
+                <th th:each="h : ${hours}" th:text="${#temporals.format(h, 'HH')}">08</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${rows}">
+                <th scope="row">
+                    <span th:text="${row.court.courtName}">Court 1</span><br>
+                    <span class="muted" th:text="${row.court.sport.displayName()}">Tennis</span>
+                </th>
+                <td th:each="cell : ${row.cells}"
+                    th:classappend="${cell.booking == null} ? 'free' : (${cell.booking.type.name() == 'MAINTENANCE'} ? 'maintenance' : ${#strings.toLowerCase(cell.booking.status.name())})"
+                    th:title="${cell.booking == null} ? 'Free' : |${cell.booking.customerName} ${#temporals.format(cell.booking.localStart(), 'HH:mm')}–${#temporals.format(cell.booking.localEnd(), 'HH:mm')}|">
+                    <th:block th:if="${cell.first}">
+                        <span class="cell-label"
+                              th:text="${cell.booking.type.name() == 'MAINTENANCE'} ? (${cell.booking.note} ?: 'Closed') : ${cell.booking.customerName}">Ana</span>
+                        <form th:if="${cell.booking.type.name() == 'CUSTOMER'}"
+                              th:action="@{/manage/facilities/{id}/bookings/{b}/cancel(id=${day.facilityId},b=${cell.booking.id})}"
+                              method="post" onsubmit="return confirm('Cancel this booking? The customer will be emailed.')">
+                            <input type="hidden" name="date" th:value="${day.date}">
+                            <button class="link-button cancel-x" type="submit" title="Cancel booking">×</button>
+                        </form>
+                    </th:block>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p class="legend">
+        <span class="swatch free"></span> Free
+        <span class="swatch confirmed"></span> Booked
+        <span class="swatch held"></span> Held, waiting for confirmation
+        <span class="swatch maintenance"></span> Closed for maintenance
+    </p>
+
+    <h2>Close a court</h2>
+    <form class="card card-body form wide" th:action="@{/manage/facilities/{id}/blocks(id=${day.facilityId})}" method="post">
+        <input type="hidden" name="date" th:value="${day.date}">
+        <div class="row">
+            <div>
+                <label for="courtId">Court</label>
+                <select id="courtId" name="courtId">
+                    <option th:each="row : ${rows}" th:value="${row.court.courtId}" th:text="${row.court.courtName}">Court 1</option>
+                </select>
+            </div>
+            <div>
+                <label for="note">Reason</label>
+                <input id="note" name="note" maxlength="200" placeholder="Repainting lines">
+            </div>
+        </div>
+        <div class="row">
+            <div>
+                <label for="start">From</label>
+                <select id="start" name="start">
+                    <option th:each="h : ${hours}" th:value="${h}" th:text="${#temporals.format(h, 'HH:mm')}">08:00</option>
+                </select>
+            </div>
+            <div>
+                <label for="hours">Hours</label>
+                <input id="hours" type="number" name="hours" min="1" max="24" value="2">
+            </div>
+        </div>
+        <div class="actions">
+            <button class="button" type="submit">Close court</button>
+        </div>
+    </form>
+</section>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'manage', ~{})}">
+<head><title>Manage · Sports Booking</title></head>
+<body>
+<section>
+    <h1 class="page-title">Your facilities</h1>
+    <p th:if="${facilities.isEmpty()}" class="muted">You do not manage any facilities yet.</p>
+    <div class="grid">
+        <a class="card card-body stat" th:each="f : ${facilities}" th:href="@{/manage/facilities/{id}(id=${f.id})}">
+            <strong th:text="${f.name}">Arena</strong>
+            <span th:text="${f.city}">Sofia</span>
+        </a>
+    </div>
+</section>
+</body>
+</html>

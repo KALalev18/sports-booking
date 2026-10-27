@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, '', ~{})}">
+<head><title>Register · Sports Booking</title></head>
+<body>
+<section>
+    <div class="card card-body auth-card">
+        <h1 class="page-title">Create an account</h1>
+        <form class="form" th:action="@{/register}" th:object="${form}" method="post">
+            <label for="fullName">Full name</label>
+            <input id="fullName" th:field="*{fullName}" autocomplete="name" required>
+            <div class="field-error" th:errors="*{fullName}"></div>
+
+            <label for="email">Email</label>
+            <input id="email" type="email" th:field="*{email}" autocomplete="email" required>
+            <div class="field-error" th:errors="*{email}"></div>
+
+            <label for="password">Password</label>
+            <input id="password" type="password" th:field="*{password}" autocomplete="new-password" minlength="8"
+                   required>
+            <div class="field-error" th:errors="*{password}"></div>
+
+            <label for="confirmPassword">Repeat password</label>
+            <input id="confirmPassword" type="password" th:field="*{confirmPassword}" autocomplete="new-password"
+                   required>
+            <div class="field-error" th:errors="*{passwordConfirmed}"></div>
+
+            <div class="actions">
+                <button class="button" type="submit">Register</button>
+            </div>
+        </form>
+        <p>Already have an account? <a th:href="@{/login}">Log in</a></p>
+    </div>
+</section>
+</body>
+</html>

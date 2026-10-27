@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sports Booking</title>
+    <meta name="description" content="Book sports courts by the hour without double bookings. Spring Boot 4, Java 25, PostgreSQL.">
+    <style>
+        :root {
+            --green: #2f9e44;
+            --green-dark: #237a34;
+            --green-light: #e8f5eb;
+            --text: #1d2b22;
+            --muted: #5b6b60;
+            --bg: #f5f7f5;
+            --card: #ffffff;
+            --border: #dfe6e1;
+            --code-bg: #1e2a22;
+            --code-text: #e6efe8;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --green: #40c057;
+                --green-dark: #69db7c;
+                --green-light: #1f3326;
+                --text: #e6efe8;
+                --muted: #a3b3a8;
+                --bg: #121815;
+                --card: #1a221d;
+                --border: #2c3a31;
+                --code-bg: #0c110e;
+            }
+        }
+
+        * { box-sizing: border-box; }
+
+        [hidden] { display: none !important; }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            line-height: 1.6;
+        }
+
+        a { color: var(--green-dark); }
+
+        .container { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+        header.hero {
+            background: #2f9e44;
+            color: #fff;
+            padding: 48px 0 40px;
+        }
+
+        .hero h1 { margin: 0 0 8px; font-size: clamp(2rem, 5vw, 2.8rem); line-height: 1.15; }
+
+        .hero p { margin: 0 0 22px; font-size: 1.15rem; max-width: 680px; opacity: 0.95; }
+
+        .buttons { display: flex; flex-wrap: wrap; gap: 10px; }
+
+        .button {
+            display: inline-block;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            background: #fff;
+            color: #237a34;
+        }
+
+        .button.outline { background: transparent; color: #fff; border: 1px solid rgba(255, 255, 255, 0.7); }
+
+        .badges { margin-top: 18px; display: flex; flex-wrap: wrap; gap: 6px; }
+
+        .badge {
+            font-size: 0.82rem;
+            padding: 3px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        main { padding: 32px 0 56px; }
+
+        section { margin: 40px 0; }
+
+        h2 { font-size: 1.5rem; margin: 0 0 14px; }
+
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .demo img { display: block; width: 100%; height: auto; }
+
+        .caption { color: var(--muted); font-size: 0.92rem; margin-top: 8px; }
+
+        .note {
+            background: var(--green-light);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 16px 0;
+        }
+
+        .stats { display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+        .stat { padding: 18px 20px; }
+
+        .stat strong { display: block; font-size: 1.6rem; color: var(--green-dark); line-height: 1.2; }
+
+        .stat span { color: var(--muted); font-size: 0.93rem; }
+
+        pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.88rem;
+        }
+
+        .two { display: grid; gap: 18px; grid-template-columns: 1fr 1fr; }
+
+        .two img { display: block; width: 100%; height: auto; }
+
+        ol li, ul li { margin-bottom: 6px; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+
+        td, th { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+
+        th { color: var(--muted); font-weight: 600; width: 32%; }
+
+        footer { border-top: 1px solid var(--border); color: var(--muted); padding: 24px 0; font-size: 0.9rem; }
+
+        @media (max-width: 720px) {
+            .two { grid-template-columns: 1fr; }
+            th { width: auto; }
+        }
+    </style>
+</head>
+<body>
+<header class="hero">
+    <div class="container">
+        <h1>Sports Booking</h1>
+        <p>Book sports courts by the hour, with no double bookings, even when many people book the same slot at the same
+            moment.</p>
+        <div class="buttons">
+            <a class="button" href="https://github.com/KALalev18/sports-booking">Source code on GitHub</a>
+            <a class="button outline" href="api/">Browse the API docs</a>
+            <!-- Set data-live-url to the Render URL once the live demo is deployed -->
+            <a class="button outline" id="live" data-live-url="" hidden>Try the live demo</a>
+        </div>
+        <div class="badges">
+            <span class="badge">Java 25</span>
+            <span class="badge">Spring Boot 4.1</span>
+            <span class="badge">Spring Security · JWT</span>
+            <span class="badge">PostgreSQL 17 · Flyway</span>
+            <span class="badge">Testcontainers</span>
+            <span class="badge">Docker</span>
+            <span class="badge">GitHub Actions</span>
+        </div>
+    </div>
+</header>
+
+<main class="container">
+    <section class="demo">
+        <h2>How it works</h2>
+        <div class="card"><img src="images/booking-flow.gif" width="880" height="576"
+                               alt="Searching for a padel court in Varna, holding an 18:00 slot, and confirming it"></div>
+        <p class="caption">A customer searches for padel courts in Varna, picks a free hour, which holds it for 10 minutes,
+            and confirms.</p>
+        <p class="note">This page is a static overview: GitHub Pages cannot run the Java server and database. To book
+            for real, run it locally with one command (below) or use the live demo link when it is available.</p>
+    </section>
+
+    <section>
+        <h2>The hard part: one slot, sold once</h2>
+        <p>Two people can click the same evening slot in the same millisecond. Checking "is it free?" in Java and then
+            saving is not safe: both requests can pass the check before either saves. So PostgreSQL enforces the rule
+            itself, with an exclusion constraint on time ranges:</p>
+        <pre><code>CONSTRAINT booking_no_overlap EXCLUDE USING gist (
+    court_id WITH =,
+    tstzrange(start_time, end_time, '[)') WITH &amp;&amp;
+) WHERE (status IN ('HELD', 'CONFIRMED'))</code></pre>
+        <p>A load test found a second problem: simultaneous inserts could deadlock while checking the constraint. Each
+            booking transaction now locks the court row first, so requests for one court queue up and the losers get a
+            clean <code>409 SLOT_UNAVAILABLE</code>, while other courts keep booking in parallel.</p>
+    </section>
+
+    <section>
+        <h2>Measured results</h2>
+        <div class="stats">
+            <div class="card stat"><strong>1 of 100</strong><span>simultaneous HTTP requests for one slot got it; the
+                other 99 were refused with 409</span></div>
+            <div class="card stat"><strong>593 req/s</strong><span>search throughput, 95% of answers within 46 ms</span></div>
+            <div class="card stat"><strong>568 /s</strong><span>booking attempts, 95% within 78 ms</span></div>
+            <div class="card stat"><strong>70 tests</strong><span>unit and integration tests on real PostgreSQL;
+                79% line coverage</span></div>
+        </div>
+        <p class="caption">Measured with k6 on a laptop (Ryzen 7 4800H, everything in Docker) with 441,277 bookings
+            across 1,011 courts. Commands and full output:
+            <a href="https://github.com/KALalev18/sports-booking/blob/HEAD/perf/RESULTS.md">perf/RESULTS.md</a>.</p>
+    </section>
+
+    <section>
+        <h2>Screens</h2>
+        <div class="two">
+            <figure class="card" style="margin:0"><img src="images/checkout.png" width="1280" height="900"
+                                                       alt="Checkout page with the hold countdown"></figure>
+            <figure class="card" style="margin:0"><img src="images/manage-day.png" width="1280" height="960"
+                                                       alt="Manager's day grid showing bookings per court and hour"></figure>
+        </div>
+        <p class="caption">Left: checkout with the 10-minute hold. Right: a manager's day grid, which shows what is booked,
+            held or closed for maintenance.</p>
+    </section>
+
+    <section>
+        <h2>Features</h2>
+        <ul>
+            <li>Search free slots by city, sport and day</li>
+            <li>Hold for 10 minutes, then confirm; a scheduled job releases unconfirmed holds</li>
+            <li>Free cancellation until 24 hours before; managers can cancel any time and the customer is emailed</li>
+            <li>Weekly bookings that report the weeks that clash</li>
+            <li>Customer, manager and admin roles; managers only see their own facilities</li>
+            <li>REST API with JWT, OpenAPI docs and RFC 9457 problem-detail errors</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>Design at a glance</h2>
+        <div class="card">
+            <table>
+                <tr><th>Double bookings</th><td>PostgreSQL exclusion constraint plus a per-court row lock</td></tr>
+                <tr><th>State changes</th><td>Optimistic locking with a version column, so a stale confirm loses to the expiry job</td></tr>
+                <tr><th>Time</th><td>Stored in UTC, shown in the facility's time zone; every rule uses an injected clock</td></tr>
+                <tr><th>Security</th><td>Stateless JWT for the API, session and CSRF for the site, @PreAuthorize on services</td></tr>
+                <tr><th>Schema</th><td>Flyway migrations; Hibernate only validates</td></tr>
+                <tr><th>Email</th><td>Sent after the transaction commits, on another thread</td></tr>
+                <tr><th>Quality</th><td>Spotless, Checkstyle, JaCoCo; GitHub Actions runs everything on every push</td></tr>
+            </table>
+        </div>
+    </section>
+
+    <section>
+        <h2>Run it yourself</h2>
+        <p>Needs Java 25 and Docker. PostgreSQL and a mail catcher start automatically.</p>
+        <pre><code>git clone https://github.com/KALalev18/sports-booking.git
+cd sports-booking
+./mvnw spring-boot:run
+# open http://localhost:8080 and log in as customer@example.com / demo1234</code></pre>
+        <p>Without Java: <code>docker compose --profile app up --build</code>.</p>
+    </section>
+</main>
+
+<footer>
+    <div class="container">
+        Kristian Lalev · started as a 2023 diploma project at VSCPI Burgas, rebuilt in 2026 · MIT licence
+    </div>
+</footer>
+<script>
+    const live = document.getElementById("live");
+    if (live.dataset.liveUrl) {
+        live.href = live.dataset.liveUrl;
+        live.hidden = false;
+    }
+</script>
+</body>
+</html>

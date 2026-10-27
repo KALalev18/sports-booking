@@ -1,0 +1,19 @@
+# Render blueprint: the app as a free Docker web service. PostgreSQL comes from Neon (free tier);
+# paste its JDBC URL, user and password when Render asks for the DB_* values.
+services:
+  - type: web
+    name: sports-booking
+    runtime: docker
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: demo
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: BOOKING_JWT_SECRET
+        generateValue: true

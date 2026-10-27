@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'bookings', ~{})}">
+<head><title>Weekly booking · Sports Booking</title></head>
+<body>
+<section>
+    <h1 class="page-title" th:text="|Booked ${result.booked()} of ${result.occurrences().size()} weeks|">Booked 9 of 10 weeks</h1>
+    <div class="table-wrap card">
+        <table>
+            <tbody>
+            <tr th:each="o : ${result.occurrences()}">
+                <td th:text="${#temporals.format(o.date(), 'EEE d MMM yyyy')}">Tue 2 Jun 2026</td>
+                <td><span class="status" th:classappend="${o.outcome().name() == 'BOOKED'} ? 'confirmed' : 'cancelled'"
+                          th:text="${o.outcome().name() == 'BOOKED'} ? 'Booked' : 'Not booked'">Booked</span></td>
+                <td class="muted" th:text="${o.outcome().name() == 'BOOKED'} ? '' : ${o.message()}">Someone else has booked this time</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p><a class="button" th:href="@{/bookings}">My bookings</a></p>
+</section>
+</body>
+</html>

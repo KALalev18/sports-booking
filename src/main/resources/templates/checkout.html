@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="~{fragments/layout :: layout(~{::title}, ~{::section}, 'bookings', ~{::script})}">
+<head><title>Confirm your booking · Sports Booking</title></head>
+<body>
+<section>
+    <div class="card card-body auth-card">
+        <h1 class="page-title" th:text="${booking.status.name() == 'HELD'} ? 'Confirm your booking' : 'Your booking'">
+            Confirm your booking</h1>
+        <dl class="details">
+            <dt>Where</dt>
+            <dd th:text="|${booking.facilityName}, ${booking.courtName}|">Sea Garden Courts, Court 1</dd>
+            <dt>Sport</dt>
+            <dd th:text="${booking.sport.displayName()}">Tennis</dd>
+            <dt>When</dt>
+            <dd th:text="|${#temporals.format(booking.localStart(), 'EEEE d MMMM, HH:mm')}–${#temporals.format(booking.localEnd(), 'HH:mm')}|">
+                Tuesday 2 June, 18:00–20:00</dd>
+            <dt>Price</dt>
+            <dd th:text="|€${#numbers.formatDecimal(booking.price, 1, 2)}|">€40.00</dd>
+            <dt>Status</dt>
+            <dd><span class="status" th:classappend="${#strings.toLowerCase(booking.status.name())}"
+                      th:text="${#strings.capitalize(#strings.toLowerCase(booking.status.name()))}">Held</span></dd>
+        </dl>
+
+        <th:block th:if="${booking.status.name() == 'HELD'}">
+            <p class="hold-timer" th:attr="data-expires=${booking.holdExpiresAt}">
+                Held for you for <strong data-countdown>10:00</strong> more.
+            </p>
+            <div class="actions">
+                <form th:action="@{/bookings/{id}/confirm(id=${booking.id})}" method="post">
+                    <button class="button" type="submit">Confirm booking</button>
+                </form>
+                <form th:action="@{/bookings/{id}/cancel(id=${booking.id})}" method="post">
+                    <button class="button secondary" type="submit">Release slot</button>
+                </form>
+            </div>
+        </th:block>
+        <a th:unless="${booking.status.name() == 'HELD'}" class="button secondary" th:href="@{/bookings}">My bookings</a>
+    </div>
+</section>
+<script th:inline="none">
+    // Counts down to the hold expiry the server set; the server still checks the time on confirm.
+    const timer = document.querySelector("[data-expires]");
+    if (timer) {
+        const expires = new Date(timer.dataset.expires).getTime();
+        const label = timer.querySelector("[data-countdown]");
+        const tick = () => {
+            const left = Math.max(0, Math.round((expires - Date.now()) / 1000));
+            label.textContent = Math.floor(left / 60) + ":" + String(left % 60).padStart(2, "0");
+            if (left === 0) {
+                timer.textContent = "Your hold has run out. Go back to search to pick the slot again if it is still free.";
+                document.querySelectorAll(".actions button").forEach(b => b.disabled = true);
+            } else {
+                setTimeout(tick, 1000);
+            }
+        };
+        tick();
+    }
+</script>
+</body>
+</html>
